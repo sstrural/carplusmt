@@ -896,8 +896,14 @@ async function processFile(file) {
 
 // ── EXTRAIR PDF ──
 async function extractPDF(file) {
-  // Usar pdf.js para extrair texto do PDF no navegador
+  // Configurar worker do PDF.js
   await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', () => window.pdfjsLib);
+  
+  // Configurar worker
+  if (typeof window !== 'undefined' && window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -996,16 +1002,31 @@ function parseJSON(raw) {
         let fixed = m[0]
           .replace(/,(\s*[}\]])/g, '$1')  // Remove vírgulas antes de } ou ]
           .replace(/([}\]])(\s*)([{"\[])/g, '$1,$2$3')  // Adiciona vírgulas entre elementos
+          .replace(/,(\s*{)/g, ',$1')  // Corrige vírgulas antes de objetos
+          .replace(/},(\s*{)/g, '},$1')  // Garante vírgulas entre objetos
+          .replace(/",(\s*{)/g, '",$1')  // Corrige vírgulas após strings
           .replace(/\n/g, ' ')  // Remove quebras de linha
-          .replace(/\s+/g, ' ');  // Normaliza espaços
+          .replace(/\s+/g, ' ')  // Normaliza espaços
+          .replace(/,(\s*[}\]])/g, '$1');  // Remove vírgulas finais novamente
         
         try {
           return JSON.parse(fixed);
         } catch(e3) {
           console.error('JSON original:', raw);
           console.error('JSON limpo:', clean);
+          console.error('JSON tentativa correção:', fixed);
           console.error('Erro:', e3);
-          throw new Error('Resposta da IA não pôde ser interpretada como JSON. Tente novamente.');
+          
+          // Fallback: Criar objeto básico válido
+          return {
+            score: 50,
+            classificacao: "ERRO DE ANÁLISE",
+            resumo: "Erro ao processar resposta da IA. Tente novamente.",
+            campos: {},
+            checklist: [],
+            alertas: [{"tipo":"erro","msg":"Erro de processamento. Revalide os dados."}],
+            orientacoes: ["Tente gerar o relatório novamente"]
+          };
         }
       }
     }
@@ -1451,9 +1472,9 @@ SIMCAR Inf.Esq: Lon ${getVal('f-inf-lon')} / Lat ${getVal('f-inf-lat')}
 SIMCAR Sup.Dir: Lon ${getVal('f-sup-lon')} / Lat ${getVal('f-sup-lat')}
 KML gerado: ${S.kml ? 'SIM (' + (S.kml.match(/<Placemark>/g)||[]).length + ' pontos)' : 'NÃO'}
 
-IMPORTANTE: Retorne APENAS JSON válido, sem markdown, sem texto extra. Não adicione vírgulas após últimos itens.
+IMPORTANTE: Retorne APENAS JSON válido. Certifique-se de que todas as chaves e valores estão entre aspas. NÃO adicione vírgulas após o último item.
 
-{"score":85,"classificacao":"COMPLETO","resumo":"...","campos":{"nome":{"status":"ok","obs":""},"municipio":{"status":"ok","obs":""},"area":{"status":"ok","obs":""},"perimetro":{"status":"ok","obs":""},"matricula":{"status":"ok","obs":""},"ccir":{"status":"ok","obs":""},"cns":{"status":"ok","obs":""},"datum":{"status":"ok","obs":""},"modulos_fiscais":{"valor":"${mods}","status":"ok","obs":""},"porte_imovel":{"valor":"","status":"ok","obs":""},"prop_nome":{"status":"ok","obs":""},"prop_cpf":{"status":"ok","obs":""},"eng_crea":{"status":"ok","obs":""},"eng_incra":{"status":"ok","obs":""},"eng_art":{"status":"ok","obs":""},"coords_simcar":{"status":"ok","obs":""},"kml":{"status":"ok","obs":""}},"checklist":[{"item":"Objetivo do CAR definido","status":"ok"}],"alertas":[{"tipo":"ok","msg":"..."}],"orientacoes":["Etapa 1: ..."]}`;
+{"score":85,"classificacao":"COMPLETO","resumo":"Análise completa dos dados","campos":{"nome":{"status":"ok","obs":""},"municipio":{"status":"ok","obs":""},"area":{"status":"ok","obs":""},"perimetro":{"status":"ok","obs":""},"matricula":{"status":"ok","obs":""},"ccir":{"status":"ok","obs":""},"cns":{"status":"ok","obs":""},"datum":{"status":"ok","obs":""},"modulos_fiscais":{"valor":"${mods}","status":"ok","obs":""},"porte_imovel":{"valor":"","status":"ok","obs":""},"prop_nome":{"status":"ok","obs":""},"prop_cpf":{"status":"ok","obs":""},"eng_crea":{"status":"ok","obs":""},"eng_incra":{"status":"ok","obs":""},"eng_art":{"status":"ok","obs":""},"coords_simcar":{"status":"ok","obs":""},"kml":{"status":"ok","obs":""}},"checklist":[{"item":"Dados básicos preenchidos","status":"ok"}],"alertas":[{"tipo":"ok","msg":"Dados validados com sucesso"}],"orientacoes":["Prosseguir com o cadastro no SIMCAR"]}`;
 
   try {
     const raw = await callAPI({ messages: [{ role:'user', content: prompt }], maxTokens: 2000 });
