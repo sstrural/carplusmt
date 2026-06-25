@@ -778,12 +778,24 @@ textarea {
 let GROQ_API_KEY = '';
 
 // ── ESTADO ──
-const S = { kml: '', csv: '', wkt: '', geojson: null, nomeImovel: '', vertices: [], validacaoGeometrica: null };
+const S = { kml: '', shapeData: null, nomeImovel: '', vertices: [], validacaoGeometrica: null };
 
 // ── UTILIDADES ──
 function $(id) { return document.getElementById(id); }
 function setVal(id, v) { const el = $(id); if (el && v != null && v !== '') { el.value = v; el.classList.add('auto-filled'); } }
 function getVal(id) { return ($(id)?.value || '').trim(); }
+
+function detectUTMZoneFromMetadata(dados = {}) {
+  if (dados.meridiano_central?.includes('63') || dados.fuso?.includes('20')) return 20;
+  if (dados.meridiano_central?.includes('51') || dados.fuso?.includes('22')) return 22;
+  return 21;
+}
+
+function getDatumDescription(datum) {
+  if ((datum || '').includes('20')) return '20S (MC 63°W)';
+  if ((datum || '').includes('22')) return '22S (MC 51°W)';
+  return '21S (MC 57°W)';
+}
 
 function toast(msg, type='erro') {
   const el = $('toast');
@@ -1198,12 +1210,7 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
   // Calcular coords SIMCAR e KML a partir dos vértices
   if (dados.vertices && dados.vertices.length >= 3) {
     // Determinar zona baseado no memorial (meridiano_central ou fuso)
-    let zona = 21; // Default
-    if (dados.meridiano_central?.includes('63') || dados.fuso?.includes('20')) {
-      zona = 20;
-    } else if (dados.meridiano_central?.includes('51') || dados.fuso?.includes('22')) {
-      zona = 22;
-    }
+    const zona = detectUTMZoneFromMetadata(dados);
     
     S.vertices = dados.vertices;
     
@@ -1246,10 +1253,7 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
     
     // Gerar múltiplos formatos
     S.kml = buildKML(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
-    S.geojson = buildGeoJSON(dados.vertices, coords, dados);
-    S.csv = buildCSV(dados.vertices, coords);
-    S.wkt = buildWKT(coords);
-    S.geojson = buildGeoJSON(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
+    S.shapeData = buildShapeFeatureCollection(dados.vertices, coords, dados, zona);
   }
 
   S.nomeImovel = dados.nome_imovel || 'Fazenda';
@@ -1303,55 +1307,6 @@ function utmToLatLon(E, N, zona) {
   return { lat: lat*180/Math.PI, lon: lon*180/Math.PI };
 }
 
-// ── GERAR SHAPEFILE ──
-function buildSHP(vertices, coords, nome, area, proprietario) {
-  // Gerar arquivo .shp (binário) seria complexo no navegador
-  // Alternativa: Gerar CSV compatível com QGIS/ArcGIS para conversão
-  
-  const csvContent = [
-    'id,nome,area_ha,proprietario,longitude,latitude,easting,northing',
-    ...vertices.map((v, i) => 
-      `${i+1},"${v.nome}",${area},"${proprietario}",${coords[i].lon.toFixed(8)},${coords[i].lat.toFixed(8)},${v.E},${v.N}`
-    )
-  ].join('\n');
-
-  return csvContent;
-}
-
-// ── GERAR WKT (Well-Known Text) ──
-function buildWKT(coords) {
-  const coordsStr = coords.map(c => `${c.lon.toFixed(8)} ${c.lat.toFixed(8)}`).join(',');
-  const firstCoord = `${coords[0].lon.toFixed(8)} ${coords[0].lat.toFixed(8)}`;
-  
-  return `POLYGON((${coordsStr},${firstCoord}))`;
-}
-
-// ── GERAR GEOJSON ──
-function buildGeoJSON(vertices, coords, nome, area, proprietario) {
-  const coordinates = [...coords.map(c => [c.lon, c.lat]), [coords[0].lon, coords[0].lat]];
-  
-  return {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "properties": {
-          "nome": nome || 'Fazenda',
-          "area_ha": parseFloat(area) || 0,
-          "proprietario": proprietario || '',
-          "vertices": vertices.length,
-          "perimetro_m": geometrico.calcularPerimetro(vertices),
-          "datum": "SIRGAS2000",
-          "gerado_por": "CAR-MT Analisador"
-        },
-        "geometry": {
-          "type": "Polygon",
-          "coordinates": [coordinates]
-        }
-      }
-    ]
-  };
-}
 function buildKML(vertices, coords, nome, area, proprietario) {
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const coordStr = coords.map(c => `          ${c.lon.toFixed(8)},${c.lat.toFixed(8)},0`).join('\n');
@@ -1390,9 +1345,9 @@ ${placemarks}
 </kml>`;
 }
 
-// ── GERAR GEOJSON (Compatível com QGIS, ArcGIS, SIGEF) ──
-function buildGeoJSON(vertices, coords, dados) {
-  const geojson = {
+// ── GERAR COLEÇÃO ESPACIAL PARA SHAPEFILE ──
+function buildShapeFeatureCollection(vertices, coords, dados, zona) {
+  const featureCollection = {
     type: "FeatureCollection",
     crs: {
       type: "name",
@@ -1404,17 +1359,18 @@ function buildGeoJSON(vertices, coords, dados) {
         properties: {
           nome: dados.nome_imovel || 'Imóvel Rural',
           area_ha: parseFloat((dados.area || '0').replace(',', '.')) || 0,
-          perimetro_m: parseFloat(dados.perimetro || '0'),
-          municipio: dados.municipio,
+          perim_m: parseFloat((dados.perimetro || '0').replace(',', '.')) || 0,
+          municipio: dados.municipio || '',
           uf: dados.uf || 'MT',
-          matricula: dados.matricula,
-          ccir: dados.ccir,
-          cns: dados.cns,
-          proprietario: dados.prop_nome,
-          cpf: dados.prop_cpf,
+          matricula: dados.matricula || '',
+          ccir: dados.ccir || '',
+          cns: dados.cns || '',
+          prop_nome: dados.prop_nome || '',
+          prop_cpf: dados.prop_cpf || '',
           datum: 'SIRGAS2000',
-          fuso_utm: (dados.meridiano_central || '').includes('51') ? '22S' : '21S',
-          vertices_total: vertices.length,
+          fuso: `${zona}S`,
+          meridiano: zona === 20 ? '-63' : zona === 22 ? '-51' : '-57',
+          verts_tot: vertices.length,
           gerado_por: 'CAR-MT Analisador',
           gerado_em: new Date().toISOString()
         },
@@ -1431,14 +1387,14 @@ function buildGeoJSON(vertices, coords, dados) {
   
   // Adicionar pontos dos vértices
   vertices.forEach((v, i) => {
-    geojson.features.push({
+    featureCollection.features.push({
       type: "Feature",
       properties: {
         vertice: v.nome || `V${i+1}`,
-        coord_e_utm: v.E,
-        coord_n_utm: v.N,
-        latitude: parseFloat(coords[i].lat.toFixed(8)),
-        longitude: parseFloat(coords[i].lon.toFixed(8)),
+        coord_e: Number(v.E) || 0,
+        coord_n: Number(v.N) || 0,
+        lat: parseFloat(coords[i].lat.toFixed(8)),
+        lon: parseFloat(coords[i].lon.toFixed(8)),
         ordem: i + 1
       },
       geometry: {
@@ -1448,23 +1404,7 @@ function buildGeoJSON(vertices, coords, dados) {
     });
   });
   
-  return geojson;
-}
-
-// ── GERAR CSV DOS VÉRTICES ──
-function buildCSV(vertices, coords) {
-  let csv = 'vertice,coord_e_utm,coord_n_utm,latitude,longitude,ordem\n';
-  vertices.forEach((v, i) => {
-    csv += `"${v.nome || 'V'+(i+1)}",${v.E},${v.N},${coords[i].lat.toFixed(8)},${coords[i].lon.toFixed(8)},${i+1}\n`;
-  });
-  return csv;
-}
-
-// ── GERAR WKT (Well-Known Text) ──
-function buildWKT(coords) {
-  const points = coords.map(c => `${c.lon.toFixed(8)} ${c.lat.toFixed(8)}`).join(', ');
-  const firstPoint = `${coords[0].lon.toFixed(8)} ${coords[0].lat.toFixed(8)}`;
-  return `POLYGON((${points}, ${firstPoint}))`;
+  return featureCollection;
 }
 
 // ── PREENCHER FORMULÁRIO ──
@@ -1489,12 +1429,13 @@ function preencherForm(d, texto, fileName) {
 
   // Datum - Auto-detectar fuso baseado no memorial
   const datumSel = $('f-datum');
-  if (d.meridiano_central?.includes('63') || d.fuso?.includes('20')) {
+  const zona = detectUTMZoneFromMetadata(d);
+  if (zona === 20) {
     datumSel.value = 'SIRGAS2000_20S';
-  } else if (d.meridiano_central?.includes('51') || d.fuso?.includes('22')) {
+  } else if (zona === 22) {
     datumSel.value = 'SIRGAS2000_22S';
   } else {
-    datumSel.value = 'SIRGAS2000_21S'; // Default para centro de MT
+    datumSel.value = 'SIRGAS2000_21S'; // Default para centro de MT (MC 57°W)
   }
 
   // Finalidade
@@ -1679,13 +1620,10 @@ function renderResult(r) {
     ? `<div class="kml-success">
         <div class="kml-info">
           <div class="ki-title">✅ Arquivos Geoespaciais Gerados</div>
-          <div class="ki-sub">${(S.kml.match(/<Placemark>/g)||[]).length} pontos · Múltiplos formatos · Prontos para SIG</div>
+          <div class="ki-sub">${(S.kml.match(/<Placemark>/g)||[]).length} pontos · KML e Shapefile · Prontos para SIG</div>
         </div>
         <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem;">
           <button class="btn-dl" onclick="dlKML()">⬇️ KML (Google Earth)</button>
-          <button class="btn-dl" onclick="dlGeoJSON()">⬇️ GeoJSON (Web)</button>
-          <button class="btn-dl" onclick="dlCSV()">⬇️ CSV (Pontos)</button>
-          <button class="btn-dl" onclick="dlWKT()">⬇️ WKT (Texto)</button>
           <button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile (QGIS/ArcGIS)</button>
         </div>
       </div>
@@ -1769,7 +1707,7 @@ function renderResult(r) {
           <div class="simcar-item"><label>SUPERIOR DIREITA · Longitude</label><div class="simcar-val">${getVal('f-sup-lon')||'—'}</div></div>
           <div class="simcar-item"><label>SUPERIOR DIREITA · Latitude</label><div class="simcar-val">${getVal('f-sup-lat')||'—'}</div></div>
         </div>
-        <div class="simcar-note">Datum SIRGAS2000 · Graus decimais · Negativo = Sul/Oeste · Fuso UTM ${getVal('f-datum').includes('22') ? '22S (MC 51°W)' : '21S (MC 57°W)'}</div>
+        <div class="simcar-note">Datum SIRGAS2000 · Graus decimais · Negativo = Sul/Oeste · Fuso UTM ${getDatumDescription(getVal('f-datum'))}</div>
       </div>
     </div>
 
@@ -1806,10 +1744,7 @@ function renderResult(r) {
     <div class="result-actions">
       <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
         ${S.kml ? `<button class="btn-dl" onclick="dlKML()">⬇️ KML</button>` : ''}
-        ${S.geojson ? `<button class="btn-dl" onclick="dlGeoJSON()">⬇️ GeoJSON</button>` : ''}
-        ${S.csv ? `<button class="btn-dl" onclick="dlCSV()">⬇️ CSV</button>` : ''}
-        ${S.wkt ? `<button class="btn-dl" onclick="dlWKT()">⬇️ WKT</button>` : ''}
-        ${S.vertices && S.vertices.length >= 3 ? `<button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile</button>` : ''}
+        ${S.shapeData ? `<button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile</button>` : ''}
       </div>
       <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem;">
         <button class="btn-print-r" onclick="window.print()">🖨️ Imprimir</button>
@@ -1833,198 +1768,45 @@ function dlKML() {
   downloadFile(S.kml, 'application/vnd.google-earth.kml+xml', '.kml');
 }
 
-function dlGeoJSON() {
-  if (!S.geojson) { toast('GeoJSON não disponível.'); return; }
-  const content = JSON.stringify(S.geojson, null, 2);
-  downloadFile(content, 'application/geo+json', '.geojson');
-}
-
-function dlCSV() {
-  if (!S.csv) { toast('CSV não disponível.'); return; }
-  downloadFile(S.csv, 'text/csv', '.csv');
-}
-
-function dlWKT() {
-  if (!S.wkt) { toast('WKT não disponível.'); return; }
-  downloadFile(S.wkt, 'text/plain', '.wkt');
-}
-
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
 async function dlShapefile() {
-  if (!S.vertices || S.vertices.length < 3) {
+  if (!S.shapeData || !S.vertices || S.vertices.length < 3) {
     toast('Vértices não disponíveis para gerar Shapefile.', 'warn');
     return;
   }
   
   try {
-    // Carregar JSZip para criar o ZIP
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => window.JSZip);
-    
-    // Gerar arquivos Shapefile
-    const shapefileData = generateShapefileData(S.vertices, S.geojson);
-    
-    // Criar ZIP
-    const zip = new window.JSZip();
+    await loadScript('./vendor/shpwrite.js', () => window.shpwrite);
+
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
-    
-    zip.file(`${nomeArquivo}.shp`, shapefileData.shp);
-    zip.file(`${nomeArquivo}.shx`, shapefileData.shx);
-    zip.file(`${nomeArquivo}.dbf`, shapefileData.dbf);
-    zip.file(`${nomeArquivo}.prj`, shapefileData.prj);
-    zip.file(`${nomeArquivo}.cpg`, shapefileData.cpg);
-    
-    // Download ZIP
-    zip.generateAsync({type: 'blob'}).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${nomeArquivo}_shapefile.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('Shapefile (.zip) exportado com sucesso!', 'ok');
+    const shapefileZip = window.shpwrite.zip(S.shapeData, {
+      filename: nomeArquivo,
+      folder: nomeArquivo,
+      outputType: 'blob',
+      compression: 'STORE',
+      prj: getSIRGAS2000GeographicPRJ(),
+      types: {
+        polygon: 'perimetro',
+        point: 'vertices'
+      }
     });
+
+    const blob = shapefileZip instanceof Blob ? shapefileZip : new Blob([shapefileZip], { type: 'application/zip' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${nomeArquivo}_shapefile.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Shapefile (.zip) exportado com sucesso!', 'ok');
   } catch(e) {
     toast('Erro ao gerar Shapefile: ' + e.message, 'erro');
     console.error(e);
   }
 }
 
-// ── GERAR DADOS DO SHAPEFILE ──
-function generateShapefileData(vertices, geojson) {
-  // Shapefile format with proper binary structures
-  // Generate SHP, SHX, DBF, PRJ, and CPG files
-  
-  const coords = geojson.features[0].geometry.coordinates[0];
-  const props = geojson.features[0].properties;
-  
-  // .PRJ (Projeção SIRGAS2000 UTM Zone 21S)
-  const prj = `PROJCS["SIRGAS2000 / UTM zone 21S",GEOGCS["SIRGAS 2000",DATUM["Sistema de Referencia Geocentrico para las Americas 2000",SPHEROID["GRS 1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-57],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",10000000],UNIT["metre",1]]`;
-  
-  // .CPG (Codepage - UTF-8)
-  const cpg = `UTF-8`;
-  
-  // Generate SHP binary data (Shapefile format)
-  // Format: Header(100 bytes) + Records
-  const shpBinary = generateShpBinary(coords);
-  const shxBinary = generateShxBinary(coords.length);
-  const dbfBinary = generateDbfBinary(props, coords.length);
-  
-  return {
-    shp: shpBinary,
-    shx: shxBinary,
-    dbf: dbfBinary,
-    prj: prj,
-    cpg: cpg
-  };
-}
-
-// Generate SHP binary data (polygon shapefile)
-function generateShpBinary(coordinates) {
-  // Simplified SHP generation for web export
-  // Full binary format would require detailed Shapefile spec compliance
-  
-  let buffer = new ArrayBuffer(100 + (coordinates.length * 16) + 50); // Rough estimate
-  let view = new DataView(buffer);
-  let offset = 0;
-  
-  // File header (100 bytes)
-  // Magic number (big-endian)
-  view.setInt32(offset, 0x0a270a0d, false); offset += 4; // Shape file magic
-  view.setInt32(offset, 0, false); offset += 4; // Unused
-  view.setInt32(offset, 0, false); offset += 4; // Unused
-  view.setInt32(offset, 0, false); offset += 4; // Unused
-  view.setInt32(offset, 0, false); offset += 4; // Unused
-  view.setInt32(offset, 0, false); offset += 4; // Unused
-  view.setInt32(offset, 1000, false); offset += 4; // File length (in 16-bit words)
-  view.setInt32(offset, 1000, true); offset += 4; // Version (little-endian)
-  view.setInt32(offset, 5, true); offset += 4; // Shape type: Polygon (5)
-  
-  // Bounding box (4 doubles = 32 bytes)
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  coordinates.forEach(([lon, lat]) => {
-    minX = Math.min(minX, lon);
-    maxX = Math.max(maxX, lon);
-    minY = Math.min(minY, lat);
-    maxY = Math.max(maxY, lat);
-  });
-  
-  view.setFloat64(offset, minX, true); offset += 8;
-  view.setFloat64(offset, minY, true); offset += 8;
-  view.setFloat64(offset, maxX, true); offset += 8;
-  view.setFloat64(offset, maxY, true); offset += 8;
-  
-  // Zero values for Z and M (16 bytes)
-  offset += 32;
-  
-  // Record data (simplified)
-  // Record header
-  view.setInt32(offset, 1, false); offset += 4; // Record number (big-endian)
-  view.setInt32(offset, 100, false); offset += 4; // Content length
-  view.setInt32(offset, 5, true); offset += 4; // Shape type (little-endian)
-  
-  return new Blob([buffer], {type: 'application/octet-stream'});
-}
-
-// Generate SHX binary (index file)
-function generateShxBinary(numRecords) {
-  let buffer = new ArrayBuffer(100 + (numRecords * 4));
-  let view = new DataView(buffer);
-  
-  // Same header as SHP
-  view.setInt32(0, 0x0a270a0d, false); // Magic
-  view.setInt32(24, 50 + (numRecords * 4), false); // File length
-  view.setInt32(28, 1000, true); // Version
-  view.setInt32(32, 5, true); // Shape type
-  
-  return new Blob([buffer], {type: 'application/octet-stream'});
-}
-
-// Generate DBF binary (attribute database)
-function generateDbfBinary(props, numRecords) {
-  let buffer = new ArrayBuffer(65536); // Allocate reasonable buffer
-  let view = new DataView(buffer);
-  
-  // DBF header
-  view.setUint8(0, 0x03); // Version (dBASE III)
-  let today = new Date();
-  view.setUint8(1, today.getFullYear() - 1900); // Year since 1900
-  view.setUint8(2, today.getMonth() + 1); // Month (1-12)
-  view.setUint8(3, today.getDate()); // Day
-  
-  // Number of records
-  view.setInt32(4, numRecords, true);
-  view.setInt16(8, 65, true); // Header length (minimal)
-  view.setInt16(10, 50, true); // Record length
-  
-  // Field descriptors (simplified - just name and value)
-  let offset = 32;
-  
-  // Add property fields
-  for (const [key, value] of Object.entries(props)) {
-    if (key === 'nome' || key === 'area_ha' || key === 'vertices') {
-      // Field name (11 bytes)
-      let fieldName = key.substring(0, 10);
-      for (let i = 0; i < fieldName.length; i++) {
-        view.setUint8(offset + i, fieldName.charCodeAt(i));
-      }
-      offset += 11;
-      
-      // Field type: C (character)
-      view.setUint8(offset, 67); // 'C'
-      offset += 1;
-      offset += 4; // Reserved
-      
-      // Field length
-      view.setUint8(offset, 50);
-      offset += 1;
-      offset += 14; // Remaining field descriptor
-    }
-  }
-  
-  // Field terminator
-  view.setUint8(offset, 0x0D); // Carriage return
-  
-  return new Blob([buffer.slice(0, offset + 1)], {type: 'application/octet-stream'});
+function getSIRGAS2000GeographicPRJ() {
+  return 'GEOGCS["SIRGAS 2000",DATUM["Sistema_de_Referencia_Geocentrico_para_las_AmericaS_2000",SPHEROID["GRS 1980",6378137,298.257222101],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4674"]]';
 }
 
 function downloadFile(content, mimeType, extension) {
@@ -2040,7 +1822,7 @@ function downloadFile(content, mimeType, extension) {
 
 // ── RESTART ──
 function restart() {
-  S.kml = ''; S.csv = ''; S.wkt = ''; S.geojson = null; 
+  S.kml = ''; S.shapeData = null;
   S.nomeImovel = ''; S.vertices = []; S.validacaoGeometrica = null;
   $('panel-result').innerHTML = '';
   $('file-badge').innerHTML = '';
