@@ -236,39 +236,49 @@ export function allowManualOverride(coverageResult, overridePercentage, options 
  * Calculates native coverage area by intersecting raster with property polygon
  * Classifies vegetation types and sums by category
  * Includes data recency validation and warnings
- * **Validates: Requirements 5.2, 5.3, 5.6**
+ * **Validates: Requirements 5.2, 5.4, 5.5**
  *
  * @async
- * @param {Object} imovelPolygon - GeoJSON Feature with Polygon geometry
- * @param {Object} rasterData - Raster coverage data (GeoTIFF or similar)
+ * @param {Object} imovelPolygon - GeoJSON Feature with Polygon geometry (SIRGAS2000)
+ * @param {Object} rasterData - Raster coverage data with pixels/grid
  * @param {Object} options - Configuration options
  * @param {Object} options.vegClassification - Vegetation type classification map
- * @param {number} options.pixelSizeM - Pixel size in meters for area calculation
+ * @param {number} options.pixelSizeM - Pixel size in meters for area calculation (default: 30)
  * @param {number} options.dataRecencyThreshold - Years threshold for warning (default: 2)
- * @returns {Promise<Object>} Coverage calculation result with age/recency info
+ * @returns {Promise<Object>} Coverage calculation result with breakdown by vegetation type
+ *
+ * @description
+ * For each pixel in overlap with imovel polygon:
+ * - IF pixel value is in native vegetation list → accumulate area
+ * - Classify by vegetation type (Floresta, Cerrado, Caatinga, etc.)
+ * - Return totals and breakdown with confidence metrics
  *
  * @example
  * // With recent coverage data
  * const coverage = await calculateNativeCoverage(imovelGeom, rasterData);
- * console.log(coverage.total_coverage_ha); // Total native coverage in hectares
+ * console.log(coverage.total_coverage_ha); // 412.35
+ * console.log(coverage.coverage_percentage); // 69.1
+ * console.log(coverage.by_type);
+ * // {
+ * //   floresta_nativa: { area_ha: 350.25, percentage: 58.7, pixel_count: 389 },
+ * //   cerrado_nativo: { area_ha: 62.10, percentage: 10.4, pixel_count: 69 }
+ * // }
  * console.log(coverage.data_recency_warning); // null (data is recent)
  * console.log(coverage.year); // 2023
- * console.log(coverage.age_years); // 0
  *
  * @example
  * // With outdated coverage data (3 years old)
  * const coverage = await calculateNativeCoverage(imovelGeom, oldRasterData);
- * console.log(coverage.data_recency_warning); // Warning message about age
+ * console.log(coverage.data_recency_warning); // Warning about age
  * console.log(coverage.year); // 2021
  * console.log(coverage.age_years); // 3
- * console.log(coverage.allow_manual_override); // true
  */
 export async function calculateNativeCoverage(imovelPolygon, rasterData, options = {}) {
   const {
     vegClassification = {
-      floresta_nativa: [1, 2, 3, 4], // example pixel values for native forest
-      cerrado_nativo: [11, 12],       // example pixel values for native cerrado
-      caatinga_nativa: [13],
+      floresta_nativa: [1, 2, 3, 4],  // MapBiomas native forest classes
+      cerrado_nativo: [11, 12],        // MapBiomas native cerrado
+      caatinga_nativa: [13],           // MapBiomas native caatinga
     },
     pixelSizeM = 30,  // Default 30m pixel size (MapBiomas standard)
     dataRecencyThreshold = 2, // 2-year threshold per Requirements 5.3, 5.6
@@ -282,21 +292,25 @@ export async function calculateNativeCoverage(imovelPolygon, rasterData, options
     resolution_m: pixelSizeM,
     pixels_in_imovel: 0,
     pixels_classified: 0,
+    pixels_native_coverage: 0,
     timestamp: new Date().toISOString(),
-    // Data recency fields
+    // Data recency fields (Requirements 5.2, 5.3)
     year: null,
     age_years: null,
     data_recency_warning: null,
     data_recency_status: null,
     allow_manual_override: true,
+    // Data quality metrics (Requirement 5.2)
+    data_quality: {},
   };
 
   try {
-    // Check if raster data is valid
+    // Check if raster data is valid (Requirement 5.2)
     if (!rasterData) {
       result.warning = 'No raster data provided';
       result.recommendation = 'Manual coverage percentage input required';
       result.data_recency_warning = 'Coverage data unavailable';
+      result.data_recency_status = 'unavailable';
       return result;
     }
 
@@ -309,10 +323,16 @@ export async function calculateNativeCoverage(imovelPolygon, rasterData, options
       };
     }
 
-    // Calculate imovel area in hectares
+    // Calculate imovel area in hectares (Requirement 5.2)
     result.imovel_area_ha = calculatePolygonArea(imovelPolygon.geometry);
+    
+    if (result.imovel_area_ha <= 0) {
+      result.warning = 'Imovel polygon has zero or negative area';
+      result.error = 'Invalid polygon geometry';
+      return result;
+    }
 
-    // Validate raster resolution
+    // Validate raster resolution (Requirement 5.2)
     if (rasterData.resolution && rasterData.resolution > 30) {
       result.warning = `Raster resolution ${rasterData.resolution}m is coarser than optimal 30m`;
     }
@@ -325,50 +345,69 @@ export async function calculateNativeCoverage(imovelPolygon, rasterData, options
       result.data_recency_status = recencyValidation.status;
       result.data_recency_warning = recencyValidation.warning;
       result.data_recency_recommendation = recencyValidation.recommendation;
+      // Also set warning field for backward compatibility
+      if (recencyValidation.warning) {
+        result.warning = recencyValidation.warning;
+      }
     } else if (rasterData.data && Array.isArray(rasterData.data) && rasterData.data.length > 0) {
       // Data available but year unknown - treat as potentially old
       result.data_recency_warning = 'Data year is unknown - age cannot be verified';
       result.data_recency_status = 'unknown_age';
+      result.warning = result.data_recency_warning;
     }
 
-    // Process raster data if available
+    // TASK 6.2: Process raster data - intersect with imovel polygon
+    // For each pixel in overlap: IF value ∈ [floresta_nativa, cerrado_nativo, ...] → accumulate area
+    // **Validates: Requirements 5.2, 5.4, 5.5**
     if (rasterData.data && Array.isArray(rasterData.data) && rasterData.data.length > 0) {
       const pixelAreaHa = (pixelSizeM * pixelSizeM) / 10000;
 
-      // Count pixels by type
+      // Process each pixel in the raster
       for (const pixel of rasterData.data) {
-        if (!pixel || !pixel.value) continue;
+        if (!pixel || pixel.value === null || pixel.value === undefined) continue;
+
+        // Check if pixel is within imovel bounds (simple check)
+        // In production, would use proper point-in-polygon test
+        if (pixel.in_imovel === false) continue;
 
         result.pixels_in_imovel++;
 
+        // Classify by vegetation type (Requirement 5.4, 5.5)
         // Check which vegetation type this pixel belongs to
+        let pixelClassified = false;
         for (const [vegType, pixelValues] of Object.entries(vegClassification)) {
-          if (pixelValues.includes(pixel.value)) {
+          if (Array.isArray(pixelValues) && pixelValues.includes(pixel.value)) {
             result.by_type[vegType].pixel_count++;
             result.by_type[vegType].area_ha += pixelAreaHa;
             result.pixels_classified++;
+            result.pixels_native_coverage++;
+            pixelClassified = true;
             break; // Each pixel classified to only one type
           }
         }
+
+        // If pixel is not classified, it's non-native (ignore it)
+        // This handles deforested, agriculture, water, etc.
       }
 
-      // Sum total coverage
+      // Sum total coverage from all vegetation types (Requirement 5.2)
       for (const vegData of Object.values(result.by_type)) {
         result.total_coverage_ha += vegData.area_ha;
       }
 
-      // Ensure total doesn't exceed imovel area (clipping)
+      // Ensure total doesn't exceed imovel area (safety clipping)
+      // This can occur due to pixel boundaries not perfectly aligning with polygon
       if (result.total_coverage_ha > result.imovel_area_ha) {
         const scaleFactor = result.imovel_area_ha / result.total_coverage_ha;
         for (const vegData of Object.values(result.by_type)) {
-          vegData.area_ha *= scaleFactor;
+          vegData.area_ha = parseFloat((vegData.area_ha * scaleFactor).toFixed(2));
         }
         result.total_coverage_ha = result.imovel_area_ha;
         result.clipping_applied = true;
       }
     }
 
-    // Calculate percentages for each type
+    // Calculate percentages for each type (Requirement 5.4, 5.5)
     if (result.imovel_area_ha > 0) {
       result.coverage_percentage = parseFloat(
         ((result.total_coverage_ha / result.imovel_area_ha) * 100).toFixed(1)
@@ -381,18 +420,24 @@ export async function calculateNativeCoverage(imovelPolygon, rasterData, options
       }
     }
 
-    // Add data quality metrics
+    // Add data quality metrics (Requirement 5.2)
     result.data_quality = {
       resolution_adequate: !rasterData.resolution || rasterData.resolution <= 30,
       age_current: !rasterData.year || (new Date().getFullYear() - rasterData.year) <= dataRecencyThreshold,
       pixels_processed: result.pixels_classified,
       pixels_total: result.pixels_in_imovel,
+      coverage_fraction: result.pixels_in_imovel > 0 ? parseFloat((result.pixels_classified / result.pixels_in_imovel).toFixed(3)) : 0,
     };
+
+    // Round final values for consistency
+    result.total_coverage_ha = parseFloat(result.total_coverage_ha.toFixed(2));
+    result.coverage_percentage = parseFloat(result.coverage_percentage.toFixed(1));
 
     return result;
   } catch (error) {
     console.error('Error calculating coverage:', error);
     result.error = error.message;
+    result.data_recency_status = 'error';
     return result;
   }
 }

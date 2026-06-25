@@ -8,10 +8,27 @@
 
 console.log('✓ APP/RL Calculator module initialized');
 
-// Core calculation modules will be imported here as they are created
-// export { appDetector } from './appDetector.js';
-// export { rlCalculator } from './rlCalculator.js';
-// export { passiveCalculator } from './passiveCalculator.js';
+// Core calculation modules
+export { 
+  classifyBioma, 
+  calculateRLMinima,
+  getMunicipiosList,
+  classifyBiomaList
+} from './biomaClassifier.js';
+
+export { 
+  detectAPPWaterways,
+  detectAPPNascentes,
+  detectAPPSlopes,
+  detectHilltops
+} from './appDetector.js';
+
+export {
+  loadNativeCoverage,
+  calculateNativeCoverage,
+  allowManualOverride,
+  validateCoverageDataAge
+} from './coverageIntegrator.js';
 
 export const version = '1.0.0';
 export const apprlCalculatorReady = true;

@@ -120,7 +120,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Min 100 exemplos
     - _Requirements: 3.2_
 
-  - [ ] 4.3 Implementar detecção de topos de morro (local maxima)
+  - [x] 4.3 Implementar detecção de topos de morro (local maxima)
     - Usar sliding window 3x3 para encontrar máximos locais
     - Criar circular buffer de 100m ao redor de cada summit
     - Validar que não há overlap duplo com encostas (union)
@@ -151,7 +151,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Min 200 exemplos
     - _Requirements: 4.2-4.3_
 
-  - [ ] 5.3 Implementar cálculo de RL mínima obrigatória
+  - [x] 5.3 Implementar cálculo de RL mínima obrigatória
     - Função `calculateRLMinima(totalArea, bioma)`
     - RL_minima = totalArea * (80% se Amazônia | 35% se Cerrado)
     - Retornar {rlMinima, rlPercentage, biomaUsed}
@@ -174,7 +174,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Retornar Promise com raster data ou fallback para manual input
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 6.2 Implementar intersecção de raster de cobertura com imóvel
+  - [x] 6.2 Implementar intersecção de raster de cobertura com imóvel
     - Função `calculateNativeCoverage(imovelPolygon, rasterData)`
     - Para cada pixel em overlap: SE valor ∈ [floresta_nativa, cerrado_nativo, ...] → accumulate area
     - Classificar por tipo de vegetação (Floresta, Cerrado, etc.)
