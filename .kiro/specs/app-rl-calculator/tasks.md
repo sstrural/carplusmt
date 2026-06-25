@@ -214,13 +214,13 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [x] 7. Algoritmo Principal: Consolidador de Passivo Ambiental
 
-  - [ ] 7.1 Implementar consolidação de APP total
+  - [~] 7.1 Implementar consolidação de APP total
     - Função `consolidateAPP(appWaterways, appNascentes, appSlopes)`
     - Somar componentes respeitando que podem se sobrepor (usar union se necessário)
     - Retornar {appTotalHa, components: {waterways, nascentes, slopes}}
     - _Requirements: 6.1 (conceitual)_
 
-  - [ ] 7.2 Implementar consolidação de Passivo Ambiental
+  - [~] 7.2 Implementar consolidação de Passivo Ambiental
     - Função `consolidatePassivo(appTotal, rlMinima, currentCoverage, rlDeficit)`
     - Determinar status: "CONFORME" SE rlDeficit ≤ 0 AND appDeficit ≤ 0, SENÃO "PASSIVO"
     - Calcular total_regularization_area = appDeficit + rlDeficit
@@ -236,13 +236,13 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Min 20 casos
     - _Requirements: 6.3_
 
-  - [ ] 7.4 Implementar checklist de próximos passos
+  - [~] 7.4 Implementar checklist de próximos passos
     - Gerar list de ações recomendadas (vistoria, drone survey, etc.)
     - Fornecer links para Pronaf/Pronamp
     - Retornar em formato legível para PDF
     - _Requirements: 6.3, 6.6_
 
-  - [ ] 7.5 Implementar cálculo de custo de regularização
+  - [~] 7.5 Implementar cálculo de custo de regularização
     - Integrar taxa INCRA/CNA (configurável, default R$ 8.500/ha)
     - Função `estimateCost(areaToRecover, ratePerHa)`
     - Retornar {costPerHa, totalCost}
@@ -272,7 +272,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 9. Checkpoint 1 - Validar Algoritmos Core
 
-  - [ ] 9.1 Integrar todos algoritmos (APP, RL, Cobertura, Passivo) em módulo unificado
+  - [~] 9.1 Integrar todos algoritmos (APP, RL, Cobertura, Passivo) em módulo unificado
     - Criar `appRlCalculator.js` que orquestra fluxo completo
     - Testar fluxo: imovel → APP detect → RL calc → Coverage → Passivo
     - Validar que resultados são consistentes internamente
@@ -283,25 +283,25 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 10. Componentes UI: Painel de Entrada de Imóvel
 
-  - [ ] 10.1 Implementar painel de input para dados do imóvel
+  - [~] 10.1 Implementar painel de input para dados do imóvel
     - Criar form HTML com campos: Nome, Município, Área (ha), Coordenadas (lat/lon ou UTM)
     - Implementar validação de input (área > 0.1 ha, coord em MT, etc.)
     - Exibir preview de bbox calculado
     - _Requirements: 7.1, Não-funcional (Accessibility, Mobile Responsive)_
 
-  - [ ] 10.2 Implementar opções de input: Upload GeoJSON, Desenho no mapa, Import do CAR
+  - [~] 10.2 Implementar opções de input: Upload GeoJSON, Desenho no mapa, Import do CAR
     - 3 botões/tabs: "Upload File", "Draw on Map", "Import from CAR"
     - Validar formato e reprojetar para SIRGAS2000 se necessário
     - _Requirements: 8.5, 10.1_
 
-  - [ ] 10.3 Implementar desenho de polígono no mapa (Leaflet.Draw ou similar)
+  - [~] 10.3 Implementar desenho de polígono no mapa (Leaflet.Draw ou similar)
     - Permitir usuário desenhar perímetro do imóvel
     - Permitir edição de vértices
     - Calcular área dinamicamente
     - Armazenar em GeoJSON
     - _Requirements: 7.1_
 
-  - [ ] 10.4 Testar validação de entrada com coordenadas inválidas
+  - [~] 10.4 Testar validação de entrada com coordenadas inválidas
     - Test invalid: coords fora de MT, área < 0.1 ha, polígono não-fechado
     - Exibir mensagens de erro claras
     - _Requirements: 7 (Tratamento de erros)_
@@ -310,14 +310,14 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 11. Componentes UI: Mapa Interativo
 
-  - [ ] 11.1 Implementar viewport de mapa com Mapbox GL ou Leaflet
+  - [~] 11.1 Implementar viewport de mapa com Mapbox GL ou Leaflet
     - Carregar basemap (OSM ou Mapbox style)
     - Renderizar polígono imóvel (boundary preta)
     - Suportar zoom 1:100,000 até 1:5,000
     - Zoom automático ao imóvel na inicialização
     - _Requirements: 7.1, 7.2, 7.5, 7.6_
 
-  - [ ] 11.2 Implementar layers dinâmicas para APP (hidrografia, nascentes, encostas)
+  - [~] 11.2 Implementar layers dinâmicas para APP (hidrografia, nascentes, encostas)
     - Layer 1: APP_Waterways (blue buffers, toggle)
     - Layer 2: APP_Nascentes (light blue circles, toggle)
     - Layer 3: APP_Encostas (purple overlay, toggle if DEM available)
@@ -327,25 +327,25 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Usar cores conforme design (azul/roxo/verde/amarelo)
     - _Requirements: 7.1, 7.4_
 
-  - [ ] 11.3 Implementar hover tooltips e click handlers
+  - [~] 11.3 Implementar hover tooltips e click handlers
     - Hover: exibir area (ha), percentual, nome de feature
     - Click: exibir detalhes (zona de APP, reason for classification)
     - Implementar em JavaScript vanilla
     - _Requirements: 7.2, 7.3_
 
-  - [ ] 11.4 Implementar layer toggle buttons
+  - [~] 11.4 Implementar layer toggle buttons
     - 6 checkboxes para mostrar/ocultar cada layer
     - Estado salvo em sessionStorage
     - Performance: map não re-render se layer já visível
     - _Requirements: 7.4_
 
-  - [ ] 11.5 Testar performance com imóvel grande (5000+ ha)
+  - [~] 11.5 Testar performance com imóvel grande (5000+ ha)
     - Renderizar mapa com geometry complexa
     - Validar que zoom/pan remain smooth
     - Profiling: < 200ms para render, < 50ms para hover
     - _Requirements: Não-funcional (Performance)_
 
-  - [ ] 11.6 Implementar export de mapa como imagem PNG/PDF
+  - [~] 11.6 Implementar export de mapa como imagem PNG/PDF
     - Botão "Export Map as Image"
     - Usar Canvas ou html2canvas
     - Incluir legend, scale, título
@@ -355,20 +355,20 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 12. Componentes UI: Painéis de Resultados (APP, RL, Passivo)
 
-  - [ ] 12.1 Implementar painel de resultados APP (hidrografia, nascentes, encostas)
+  - [~] 12.1 Implementar painel de resultados APP (hidrografia, nascentes, encostas)
     - Exibir: APP_Total (ha), % do imóvel
     - Breakdown por componente (hidrografia, nascentes, slopes)
     - Para cada rio/nascente: nome, área, status
     - Mostrar warnings (DEM unavailable, baixa confiança)
     - _Requirements: 1.1-1.6, 2.1-2.5, 3.1-3.6_
 
-  - [ ] 12.2 Implementar painel de resultados RL
+  - [~] 12.2 Implementar painel de resultados RL
     - Exibir: Bioma, RL%, RL_Minima (ha), Cobertura_Atual (ha), RL_Deficit
     - Breakdown de cobertura por tipo (Floresta, Cerrado, etc.)
     - Source de dados (MapBiomas version, data de atualização)
     - _Requirements: 4.1-4.7, 5.1-5.7_
 
-  - [ ] 12.3 Implementar painel consolidado de Passivo Ambiental
+  - [~] 12.3 Implementar painel consolidado de Passivo Ambiental
     - Status badge (CONFORME / PASSIVO)
     - Resumo: APP_total, RL_minima, Coverage_atual, Deficit total
     - Priorização de zonas (RL primeiro, depois APP)
@@ -376,12 +376,12 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Confidence level (Alta/Média/Baixa com justificativa)
     - _Requirements: 6.1-6.6_
 
-  - [ ] 12.4 Implementar checklist de próximos passos
+  - [~] 12.4 Implementar checklist de próximos passos
     - Lista dinâmica baseada em situação (APP deficit, RL deficit, etc.)
     - Links para programas (Pronaf, Pronamp)
     - _Requirements: 6.4_
 
-  - [ ] 12.5 Testar responsividade dos painéis em tablet (iPad, Android tablet)
+  - [~] 12.5 Testar responsividade dos painéis em tablet (iPad, Android tablet)
     - Layouts em landscape e portrait
     - Touchable elements (min 44x44px)
     - _Requirements: Não-funcional (Mobile Responsive)_
@@ -390,7 +390,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 13. Checkpoint 2 - UI e Visualização
 
-  - [ ] 13.1 Integrar componentes UI com cálculos core
+  - [~] 13.1 Integrar componentes UI com cálculos core
     - Fluxo: Input Panel → Map Viewport → Results Panels
     - Executar cálculos quando imóvel é confirmado
     - Atualizar layers do mapa conforme resultados
@@ -402,29 +402,29 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 14. Geração de Relatórios e Exports
 
-  - [ ] 14.1 Implementar gerador de relatório PDF
+  - [~] 14.1 Implementar gerador de relatório PDF
     - Usar library como PDFKit ou jsPDF
     - Estrutura: Header, Executive Summary, APP breakdown, RL breakdown, Mapa, Custos, Próximos passos
     - Incluir: nome imóvel, município, data, tecnician branding (name, CREA, email)
     - Formatação A4 portrait, margens 2.5cm
     - _Requirements: 9.1-9.6_
 
-  - [ ] 14.2 Implementar export em JSON
+  - [~] 14.2 Implementar export em JSON
     - Estrutura conforme design.md (app_detection_result, rl_calculation, environmental_liability)
     - Incluir metadata (timestamp, source versions, confidence)
     - _Requirements: 6.1, 10.1_
 
-  - [ ] 14.3 Implementar export em CSV
+  - [~] 14.3 Implementar export em CSV
     - Formato: linha por componente (rio, nascente, slope, RL, cobertura, custo)
     - Columns: type, name, area_ha, percentage, status
     - _Requirements: 6.5_
 
-  - [ ] 14.4 Implementar auto-naming de arquivos exportados
+  - [~] 14.4 Implementar auto-naming de arquivos exportados
     - Padrão: `{PropertyName}_APP_RL_{YYYY-MM-DD}.{pdf|json|csv}`
     - Download automático ao clicar botão
     - _Requirements: 9.6, 6.1_
 
-  - [ ] 14.5 Testar geração de PDF com dados complexos
+  - [~] 14.5 Testar geração de PDF com dados complexos
     - Propriedade real grande (5000+ ha, 20+ features)
     - Validar que mapa é legível, cores corretas
     - Size < 5MB
@@ -435,25 +435,25 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 15. Integração com SIMCAR e CAR-MT Existente
 
-  - [ ] 15.1 Implementar API de sincronização com formulário SIMCAR
+  - [~] 15.1 Implementar API de sincronização com formulário SIMCAR
     - Criar método `syncToSIMCAR()` que passa: app_total_ha, rl_percentage, rl_deficit_ha
     - Auto-popular campos relevantes no form CAR-MT
     - Preservar dados na sessão para referência
     - _Requirements: 10.1, 10.2_
 
-  - [ ] 15.2 Implementar bidirectional data sync
+  - [~] 15.2 Implementar bidirectional data sync
     - Se usuário edita valores APP/RL no SIMCAR → refletir no Calculator
     - Se app/RL é recalculado → atualizar SIMCAR automaticamente
     - Alert se inconsistências detectadas
     - _Requirements: 10.3, 10.4_
 
-  - [ ] 15.3 Integrar APP/RL data com exportação final CAR
+  - [~] 15.3 Integrar APP/RL data com exportação final CAR
     - Incluir APP/RL results em KML export
     - Incluir em JSON export
     - Validar que exported files têm dados completos
     - _Requirements: 10.6_
 
-  - [ ] 15.4 Testar fluxo de integração end-to-end
+  - [~] 15.4 Testar fluxo de integração end-to-end
     - Draw imovel no CAR → Switch to APP/RL calculator
     - Calculate APP/RL → Auto-populate SIMCAR fields
     - Export CAR completo → Validar que APP/RL data included
@@ -463,25 +463,25 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 16. Performance, Web Workers e Otimizações
 
-  - [ ] 16.1 Implementar Web Worker para cálculos pesados
+  - [~] 16.1 Implementar Web Worker para cálculos pesados
     - Offload: APP buffer calculations, DEM analysis, raster intersection
     - Main thread: UI updates, map rendering, form interactions
     - Post results via `self.postMessage()` e update UI
     - _Requirements: Não-funcional (Performance)_
 
-  - [ ] 16.2 Implementar spatial indexing para queries rápidas
+  - [~] 16.2 Implementar spatial indexing para queries rápidas
     - RBush para hidrografia (já feito em 1.4, integrar aqui)
     - Cache de tiles DEM (lazy loading)
     - LRU cache para últimos 3 cálculos
     - _Requirements: Não-funcional (Performance, Scalability)_
 
-  - [ ] 16.3 Testar performance com propriedades grandes (5000+ ha)
+  - [~] 16.3 Testar performance com propriedades grandes (5000+ ha)
     - Benchmark: < 10 segundos para APP/RL completo
     - Mapa interativo durante cálculo (não bloqueia)
     - Memory usage < 500MB
     - _Requirements: Não-funcional (Performance)_
 
-  - [ ] 16.4 Implementar progress indicator para operações longas
+  - [~] 16.4 Implementar progress indicator para operações longas
     - Exibir barra de progresso durante detecção APP
     - Exibir mensagem "Calculando RL..." etc.
     - Permitir cancelamento de operação
@@ -491,25 +491,25 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 17. Testes de Integração e Validação End-to-End
 
-  - [ ] 17.1 Implementar suite de testes de integração
+  - [~] 17.1 Implementar suite de testes de integração
     - Test fluxo completo: imovel import → APP calc → RL calc → Coverage → Passivo → Export
     - Usar imóveis reais de teste (Sapezal, Sorriso, etc.)
     - Validar resultados contra referência manual (±5% tolerância)
     - _Requirements: 1-10 (integração)_
 
-  - [ ] 17.2 Testar fluxos offline
+  - [~] 17.2 Testar fluxos offline
     - Desligar internet, verificar que funciona com dados pré-carregados
     - Verificar que avisos são exibidos para dados remotos indisponíveis
     - Validar que dados persistem entre sessões (IndexedDB)
     - _Requirements: 8.1-8.7, Não-funcional (Offline)_
 
-  - [ ] 17.3 Testar acessibilidade (WCAG 2.1 AA)
+  - [~] 17.3 Testar acessibilidade (WCAG 2.1 AA)
     - Verificar contraste de cores (todos layers legíveis)
     - Verificar navegação por teclado (tab, enter, arrows)
     - Testar com screen reader (NVDA ou similar)
     - _Requirements: Não-funcional (Accessibility)_
 
-  - [ ] 17.4 Testar dados de entrada inválidos/edge cases
+  - [~] 17.4 Testar dados de entrada inválidos/edge cases
     - Imóvel com zero hidrografia → Retorna 0 APP corretamente
     - Imóvel 100% APP → Handled corretamente
     - Imóvel em limites de bioma → RL aplicado corretamente
@@ -520,7 +520,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 18. Checkpoint 3 - Testes e Qualidade
 
-  - [ ] 18.1 Executar suite completa de testes
+  - [~] 18.1 Executar suite completa de testes
     - Unit tests: 100% de algoritmos core (coverage > 90%)
     - Property-based tests: 10 correctness properties (todos passam)
     - Integration tests: 5+ fluxos end-to-end (todos passam)
@@ -532,32 +532,32 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 19. Deployment e Documentação
 
-  - [ ] 19.1 Preparar build e deployment para Vercel
+  - [~] 19.1 Preparar build e deployment para Vercel
     - Configurar `vercel.json` com environment variables (MAP_TOKEN, etc.)
     - Build script: webpack/esbuild, minificação, sourcemaps
     - Otimizar bundle size (< 2MB gzipped para JS core)
     - _Requirements: Não-funcional (Deployment)_
 
-  - [ ] 19.2 Fazer deploy preview no Vercel
+  - [~] 19.2 Fazer deploy preview no Vercel
     - Deploy branch de desenvolvimento
     - Testar em ambiente staging (live)
     - Validar que offline funciona (service worker, IndexedDB)
     - _Requirements: Não-funcional (Deployment)_
 
-  - [ ] 19.3 Documentar API e componentes
+  - [~] 19.3 Documentar API e componentes
     - JSDoc comments em todas funções principais
     - README com instruções de setup, build, test
     - Diagrama de arquitetura (módulos, fluxo de dados)
     - _Requirements: Não-funcional (Documentation)_
 
-  - [ ] 19.4 Criar guia de uso para técnicos (em português)
+  - [~] 19.4 Criar guia de uso para técnicos (em português)
     - Screenshots de cada painel
     - Passo-a-passo: carregar imóvel → calcular APP/RL → exportar PDF
     - Explicação de cada campo e resultado
     - Troubleshooting (dados offline, DEM indisponível, etc.)
     - _Requirements: Não-funcional (User Documentation)_
 
-  - [ ] 19.5 Preparar dados para field testing com technicians MT
+  - [~] 19.5 Preparar dados para field testing com technicians MT
     - Compilar dataset de 5-10 imóveis reais em MT (Sapezal, Sorriso, etc.)
     - Validar resultados contra cálculos manuais/referência
     - Criar form de feedback para technicians (usability, accuracy, suggestions)
@@ -567,7 +567,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
 
 - [ ] 20. Final Checkpoint - Production Ready
 
-  - [ ] 20.1 Revisão final e deploy para produção
+  - [~] 20.1 Revisão final e deploy para produção
     - Executar smoke tests em produção (staging + live)
     - Validar que offline funciona
     - Confirmar que todos property-based tests passam
@@ -576,7 +576,7 @@ Fases: (1) Setup & Data Infrastructure, (2) Core Algorithms, (3) UI Components, 
     - Ensure all tests pass, ask the user if questions arise.
     - _Requirements: 1-10 (overall compliance)_
 
-  - [ ] 20.2 Fazer rollout iterativo para technicians MT
+  - [~] 20.2 Fazer rollout iterativo para technicians MT
     - Deploy beta para grupo piloto (2-3 technicians)
     - Coletar feedback em campo (1-2 semanas)
     - Iterar conforme feedback
