@@ -602,6 +602,18 @@ textarea {
               <option value="SAD69_21S">SAD69 – Fuso 21S</option>
             </select>
           </div>
+          <div>
+            <label>Bioma</label>
+            <select id="f-bioma">
+              <option value="cerr" selected>Cerrado (35% RL mínima)</option>
+              <option value="amz">Amazônia (80% RL mínima)</option>
+            </select>
+          </div>
+          <div>
+            <label>Área de Vegetação Nativa Existente (ha)</label>
+            <input id="f-vegetacao-existente" type="number" placeholder="Ex: 208,67">
+            <p class="field-hint">Área de vegetação nativa que já existe no imóvel</p>
+          </div>
           <div class="col-full">
             <label>Confrontantes</label>
             <input id="f-confrontantes" placeholder="Ex: Fazenda Fartura, Rio Sapezal, Estrada Municipal SZL-03, Fazenda Cacoré">
@@ -777,8 +789,58 @@ textarea {
 // A API key será inserida pelo usuário na interface
 let GROQ_API_KEY = '';
 
+// ── PASSIVO AMBIENTAL ──
+const PassivoAmbiental = {
+  calcular: function(areaTotalHa, perimetroM, vegetacaoExistenteHa, bioma) {
+    // bioma: 'cerr' (Cerrado) ou 'amz' (Amazônia)
+    const areaTotalM2 = areaTotalHa * 10000;
+    
+    // Cálculo de APP (aproximado: perímetro × 30m, 50m, 100m)
+    const app30M2 = perimetroM * 30;
+    const app50M2 = perimetroM * 50;
+    const app100M2 = perimetroM * 100;
+    const app30Ha = app30M2 / 10000;
+    const app50Ha = app50M2 / 10000;
+    const app100Ha = app100M2 / 10000;
+    
+    // Cálculo de RL mínima
+    const rlPercentual = bioma === 'amz' ? 0.8 : 0.35;
+    const rlMinimaHa = areaTotalHa * rlPercentual;
+    
+    // Déficit de RL
+    const deficitRlHa = Math.max(0, rlMinimaHa - vegetacaoExistenteHa);
+    
+    // Déficit total (RL + APP, simplificado)
+    const deficitTotalHa = deficitRlHa + app30Ha; // Usando APP 30m como base
+    
+    // Estimativa de custo (R$ 15.000/ha de recuperação, valor referência)
+    const custoRecuperacao = deficitTotalHa * 15000;
+    
+    return {
+      areaTotalHa,
+      perimetroM,
+      vegetacaoExistenteHa,
+      bioma,
+      biomaNome: bioma === 'amz' ? 'Amazônia' : 'Cerrado',
+      rl: {
+        percentualMinimo: rlPercentual * 100,
+        minimaHa: rlMinimaHa,
+        deficitHa: deficitRlHa,
+        deficitPercentual: areaTotalHa > 0 ? (deficitRlHa / areaTotalHa) * 100 : 0
+      },
+      app: {
+        ha30: app30Ha,
+        ha50: app50Ha,
+        ha100: app100Ha
+      },
+      deficitTotalHa,
+      custoRecuperacao
+    };
+  }
+};
+
 // ── ESTADO ──
-const S = { kml: '', shapeData: null, nomeImovel: '', vertices: [], validacaoGeometrica: null };
+const S = { kml: '', shapeData: null, nomeImovel: '', vertices: [], validacaoGeometrica: null, passivoAmbiental: null };
 
 // ── UTILIDADES ──
 function $(id) { return document.getElementById(id); }
@@ -1625,7 +1687,13 @@ async function analisar() {
 
   const mf  = parseFloat(getVal('f-modulo')) || 75;
   const areaN = parseFloat((getVal('f-area') || '0').replace(',','.')) || 0;
+  const perimN = parseFloat((getVal('f-perimetro') || '0').replace(',','.')) || 0;
+  const vegetN = parseFloat((getVal('f-vegetacao-existente') || '0').replace(',','.')) || 0;
+  const bioma = getVal('f-bioma') || 'cerr';
   const mods = areaN > 0 ? (areaN/mf).toFixed(2) : '—';
+  
+  // Calcular Passivo Ambiental
+  S.passivoAmbiental = PassivoAmbiental.calcular(areaN, perimN, vegetN, bioma);
 
   const prompt = `Você é especialista em CAR e SIMCAR-MT (Mato Grosso). Valide estes dados.
 
@@ -1786,6 +1854,53 @@ function renderResult(r) {
         }).join('')}
       </div>
     </div>
+    
+    ${S.passivoAmbiental ? `
+    <div class="r-section">
+      <div class="r-section-title">🌳 Passivo Ambiental</div>
+      <div class="field-grid">
+        <div class="field-card ok">
+          <div class="fl">Bioma</div>
+          <div class="fv">${S.passivoAmbiental.biomaNome}</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">Área Total</div>
+          <div class="fv">${S.passivoAmbiental.areaTotalHa.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">RL Mínima</div>
+          <div class="fv">${S.passivoAmbiental.rl.percentualMinimo.toFixed(0)}% (${S.passivoAmbiental.rl.minimaHa.toFixed(4)} ha)</div>
+        </div>
+        <div class="field-card ${S.passivoAmbiental.vegetacaoExistenteHa >= S.passivoAmbiental.rl.minimaHa ? 'ok' : 'erro'}">
+          <div class="fl">Vegetação Existente</div>
+          <div class="fv">${S.passivoAmbiental.vegetacaoExistenteHa.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ${S.passivoAmbiental.rl.deficitHa > 0 ? 'erro' : 'ok'}">
+          <div class="fl">Déficit RL</div>
+          <div class="fv">${S.passivoAmbiental.rl.deficitHa.toFixed(4)} ha (${S.passivoAmbiental.rl.deficitPercentual.toFixed(2)}%)</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">APP (30m)</div>
+          <div class="fv">${S.passivoAmbiental.app.ha30.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">APP (50m)</div>
+          <div class="fv">${S.passivoAmbiental.app.ha50.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">APP (100m)</div>
+          <div class="fv">${S.passivoAmbiental.app.ha100.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ${S.passivoAmbiental.deficitTotalHa > 0 ? 'erro' : 'ok'}">
+          <div class="fl">Déficit Total (RL + APP 30m)</div>
+          <div class="fv">${S.passivoAmbiental.deficitTotalHa.toFixed(4)} ha</div>
+        </div>
+        <div class="field-card ok">
+          <div class="fl">Estimativa de Custo de Recuperação</div>
+          <div class="fv">R$ ${S.passivoAmbiental.custoRecuperacao.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>
+      </div>
+    </div>` : ''}
 
     <div class="r-section">
       <div class="r-section-title">⚠️ Alertas e Observações</div>
