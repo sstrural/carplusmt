@@ -6,11 +6,12 @@
   "keywords": [
     "CAR",
     "SIMCAR",
-    "memorial-descritivo", 
+    "memorial-descritivo",
     "georreferenciamento",
     "mato-grosso",
     "SEMA-MT",
-    "imóvel-rural"
+    "imóvel-rural",
+    "app-rl-calculator"
   ],
   "author": "SEMA-MT",
   "license": "MIT",
@@ -18,5 +19,33 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/sema-mt/car-mt-analisador.git"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:pbt": "vitest run --grep PBT",
+    "lint": "eslint src/**/*.js tests/**/*.js",
+    "lint:fix": "eslint src/**/*.js tests/**/*.js --fix",
+    "build": "esbuild src/index.js --bundle --minify --sourcemap --outfile=dist/app-rl-calculator.min.js",
+    "build:watch": "esbuild src/index.js --bundle --sourcemap --watch --outfile=dist/app-rl-calculator.js",
+    "build:apprl": "esbuild src/modules/apprlcalculator/index.js --bundle --minify --sourcemap --outfile=dist/app-rl-calculator.min.js",
+    "dev": "esbuild src/index.js --bundle --sourcemap --outfile=dist/app-rl-calculator.js"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.0.0",
+    "esbuild": "^0.19.0",
+    "eslint": "^8.55.0",
+    "fast-check": "^3.15.0",
+    "jsdom": "^29.1.1",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "@turf/turf": "^6.5.0",
+    "geotiff": "^2.1.1",
+    "jspdf": "^2.5.1",
+    "leaflet": "^1.9.4",
+    "pako": "^2.1.0",
+    "rbush": "^4.0.1"
   }
 }
