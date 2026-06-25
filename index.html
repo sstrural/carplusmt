@@ -777,7 +777,7 @@ textarea {
 let GROQ_API_KEY = '';
 
 // ── ESTADO ──
-const S = { kml: '', nomeImovel: '', vertices: [] };
+const S = { kml: '', csv: '', wkt: '', geojson: null, nomeImovel: '', vertices: [], validacaoGeometrica: null };
 
 // ── UTILIDADES ──
 function $(id) { return document.getElementById(id); }
@@ -1218,7 +1218,12 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
       sup_lat: Math.max(...lats).toFixed(6),
       sup_lon: Math.max(...lons).toFixed(6),
     };
+    
+    // Gerar múltiplos formatos
     S.kml = buildKML(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
+    S.csv = buildSHP(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
+    S.wkt = buildWKT(coords);
+    S.geojson = buildGeoJSON(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
   }
 
   S.nomeImovel = dados.nome_imovel || 'Fazenda';
@@ -1267,7 +1272,55 @@ function utmToLatLon(E, N, zona) {
   return { lat: lat*180/Math.PI, lon: lon*180/Math.PI };
 }
 
-// ── GERAR KML ──
+// ── GERAR SHAPEFILE ──
+function buildSHP(vertices, coords, nome, area, proprietario) {
+  // Gerar arquivo .shp (binário) seria complexo no navegador
+  // Alternativa: Gerar CSV compatível com QGIS/ArcGIS para conversão
+  
+  const csvContent = [
+    'id,nome,area_ha,proprietario,longitude,latitude,easting,northing',
+    ...vertices.map((v, i) => 
+      `${i+1},"${v.nome}",${area},"${proprietario}",${coords[i].lon.toFixed(8)},${coords[i].lat.toFixed(8)},${v.E},${v.N}`
+    )
+  ].join('\n');
+
+  return csvContent;
+}
+
+// ── GERAR WKT (Well-Known Text) ──
+function buildWKT(coords) {
+  const coordsStr = coords.map(c => `${c.lon.toFixed(8)} ${c.lat.toFixed(8)}`).join(',');
+  const firstCoord = `${coords[0].lon.toFixed(8)} ${coords[0].lat.toFixed(8)}`;
+  
+  return `POLYGON((${coordsStr},${firstCoord}))`;
+}
+
+// ── GERAR GEOJSON ──
+function buildGeoJSON(vertices, coords, nome, area, proprietario) {
+  const coordinates = [...coords.map(c => [c.lon, c.lat]), [coords[0].lon, coords[0].lat]];
+  
+  return {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "nome": nome || 'Fazenda',
+          "area_ha": parseFloat(area) || 0,
+          "proprietario": proprietario || '',
+          "vertices": vertices.length,
+          "perimetro_m": geometrico.calcularPerimetro(vertices),
+          "datum": "SIRGAS2000",
+          "gerado_por": "CAR-MT Analisador"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [coordinates]
+        }
+      }
+    ]
+  };
+}
 function buildKML(vertices, coords, nome, area, proprietario) {
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const coordStr = coords.map(c => `          ${c.lon.toFixed(8)},${c.lat.toFixed(8)},0`).join('\n');
@@ -1511,13 +1564,18 @@ function renderResult(r) {
   const kmlHtml = S.kml
     ? `<div class="kml-success">
         <div class="kml-info">
-          <div class="ki-title">✅ KML gerado com sucesso</div>
-          <div class="ki-sub">${(S.kml.match(/<Placemark>/g)||[]).length} pontos · Perímetro completo · Pronto para importar no SIMCAR</div>
+          <div class="ki-title">✅ Arquivos Geoespaciais Gerados</div>
+          <div class="ki-sub">${(S.kml.match(/<Placemark>/g)||[]).length} pontos · Múltiplos formatos · Prontos para SIG</div>
         </div>
-        <button class="btn-dl" onclick="dlKML()">⬇️ Baixar KML</button>
+        <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem;">
+          <button class="btn-dl" onclick="dlKML()">⬇️ KML (Google Earth)</button>
+          <button class="btn-dl" onclick="dlGeoJSON()">⬇️ GeoJSON (Web)</button>
+          <button class="btn-dl" onclick="dlCSV()">⬇️ CSV (Pontos)</button>
+          <button class="btn-dl" onclick="dlWKT()">⬇️ WKT (Texto)</button>
+        </div>
       </div>
       <div class="kml-preview"><pre>${escHtml(S.kml.substring(0,480))}...</pre></div>`
-    : `<div class="alerta warn"><span class="ai">⚠️</span><span>KML não gerado automaticamente — importe o memorial com os vértices UTM ou use o arquivo KML gerado anteriormente.</span></div>`;
+    : `<div class="alerta warn"><span class="ai">⚠️</span><span>Arquivos geoespaciais não gerados — importe o memorial com os vértices UTM ou use o arquivo gerado anteriormente.</span></div>`;
 
   const html = `
   <div class="result-header">
@@ -1601,7 +1659,7 @@ function renderResult(r) {
     </div>
 
     <div class="r-section">
-      <div class="r-section-title">📁 Arquivo KML do Perímetro</div>
+      <div class="r-section-title">📁 Arquivos Geoespaciais</div>
       ${kmlHtml}
     </div>
 
@@ -1631,10 +1689,17 @@ function renderResult(r) {
     </div>
 
     <div class="result-actions">
-      ${S.kml ? `<button class="btn-dl" onclick="dlKML()">⬇️ Baixar KML</button>` : ''}
-      <button class="btn-print-r" onclick="window.print()">🖨️ Imprimir Relatório</button>
-      <button class="btn-secondary" onclick="goToForm()">← Editar Dados</button>
-      <button class="btn-restart" onclick="restart()">🔄 Nova Análise</button>
+      <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+        ${S.kml ? `<button class="btn-dl" onclick="dlKML()">⬇️ KML</button>` : ''}
+        ${S.geojson ? `<button class="btn-dl" onclick="dlGeoJSON()">⬇️ GeoJSON</button>` : ''}
+        ${S.csv ? `<button class="btn-dl" onclick="dlCSV()">⬇️ CSV</button>` : ''}
+        ${S.wkt ? `<button class="btn-dl" onclick="dlWKT()">⬇️ WKT</button>` : ''}
+      </div>
+      <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem;">
+        <button class="btn-print-r" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn-secondary" onclick="goToForm()">← Editar</button>
+        <button class="btn-restart" onclick="restart()">🔄 Nova Análise</button>
+      </div>
     </div>
 
   </div>`;
@@ -1646,22 +1711,46 @@ function renderResult(r) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── DOWNLOAD KML ──
+// ── DOWNLOAD ARQUIVOS GEOESPACIAIS ──
 function dlKML() {
   if (!S.kml) { toast('KML não disponível.'); return; }
-  const blob = new Blob([S.kml], { type: 'application/vnd.google-earth.kml+xml' });
+  downloadFile(S.kml, 'application/vnd.google-earth.kml+xml', '.kml');
+}
+
+function dlGeoJSON() {
+  if (!S.geojson) { toast('GeoJSON não disponível.'); return; }
+  const content = JSON.stringify(S.geojson, null, 2);
+  downloadFile(content, 'application/geo+json', '.geojson');
+}
+
+function dlCSV() {
+  if (!S.csv) { toast('CSV não disponível.'); return; }
+  downloadFile(S.csv, 'text/csv', '.csv');
+}
+
+function dlWKT() {
+  if (!S.wkt) { toast('WKT não disponível.'); return; }
+  downloadFile(S.wkt, 'text/plain', '.wkt');
+}
+
+function downloadFile(content, mimeType, extension) {
+  const blob = new Blob([content], { type: mimeType });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda') + '.kml';
+  const fileName = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda') + extension;
+  a.download = fileName;
   a.click();
   URL.revokeObjectURL(a.href);
+  toast(`Arquivo ${fileName} baixado com sucesso!`, 'ok');
 }
 
 // ── RESTART ──
 function restart() {
-  S.kml = ''; S.nomeImovel = ''; S.vertices = [];
+  S.kml = ''; S.csv = ''; S.wkt = ''; S.geojson = null; 
+  S.nomeImovel = ''; S.vertices = []; S.validacaoGeometrica = null;
   $('panel-result').innerHTML = '';
   $('file-badge').innerHTML = '';
+  $('validacao-geometrica').style.display = 'none';
   $('drop-zone').style.display = '';
   $('file-input').value = '';
   // Limpar campos auto-filled
