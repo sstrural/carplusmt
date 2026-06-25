@@ -1193,43 +1193,21 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
   const raw = await callAPI({ messages: [{ role: 'user', content: prompt }], maxTokens: 2000 });
   await nextStep(300);
 
-  // ── AUTO-DETECTAR FUSO UTM BASEADO NAS COORDENADAS E ──
-  function detectarFusoUTM(vertices) {
-    if (!vertices || vertices.length === 0) return 21; // Default fuso 21
-    
-    // Pegar primeira coordenada E válida
-    const primeiroE = vertices.find(v => v.E && v.E > 0)?.E || 500000;
-    
-    // Fuso 20S: E entre 160.000 e 830.000 (MC -63°W, -60° a -66°)
-    // Fuso 21S: E entre 160.000 e 830.000 (MC -57°W, -54° a -60°)  
-    // Fuso 22S: E entre 160.000 e 830.000 (MC -51°W, -48° a -54°)
-    
-    // Regiões aproximadas de MT por fuso:
-    // Fuso 20S: Oeste extremo (Cáceres oeste, Vila Bela)
-    // Fuso 21S: Centro (Cuiabá, Sorriso, Sapezal) - MAIORIA
-    // Fuso 22S: Leste (Água Boa, Canarana, Barra do Garças)
-    
-    if (primeiroE < 300000) {
-      // Valores baixos de E = mais a oeste = pode ser fuso 20
-      return 20;
-    } else if (primeiroE > 700000) {
-      // Valores altos de E = mais a leste = pode ser fuso 22
-      return 22;
-    } else {
-      // Valores médios = fuso 21 (centro de MT)
-      return 21;
-    }
-  }
-
   const dados = parseJSON(raw);
 
   // Calcular coords SIMCAR e KML a partir dos vértices
   if (dados.vertices && dados.vertices.length >= 3) {
-    // Auto-detectar fuso baseado nas coordenadas E (Leste)
-    const zona = detectarFusoUTM(dados.vertices);
+    // Determinar zona baseado no memorial (meridiano_central ou fuso)
+    let zona = 21; // Default
+    if (dados.meridiano_central?.includes('63') || dados.fuso?.includes('20')) {
+      zona = 20;
+    } else if (dados.meridiano_central?.includes('51') || dados.fuso?.includes('22')) {
+      zona = 22;
+    }
+    
     S.vertices = dados.vertices;
     
-    // Auto-atualizar dropdown de datum baseado no fuso detectado
+    // Auto-atualizar dropdown de datum baseado no fuso
     const datumSel = $('f-datum');
     if (zona === 20) {
       datumSel.value = 'SIRGAS2000_20S';
