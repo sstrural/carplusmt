@@ -749,6 +749,9 @@ textarea {
 
 <div class="toast" id="toast"></div>
 
+<!-- VENDOR SCRIPTS -->
+<script src="./vendor/jspdf.umd.min.js"></script>
+
 <!-- CONFIG MODAL -->
 <div class="config-overlay" id="config-overlay">
   <div class="config-modal">
@@ -836,6 +839,129 @@ const PassivoAmbiental = {
       deficitTotalHa,
       custoRecuperacao
     };
+  }
+};
+
+// ── GERADOR DE RELATÓRIO PDF ──
+const GeradorPDF = {
+  gerar: function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPos = 20;
+    const marginLeft = 20;
+    
+    // --- CABEÇALHO COM BRANDING ---
+    doc.setFillColor(27, 58, 45); // --c-forest
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CAR-MT Analisador', pageWidth / 2, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Relatório de Memorial Descritivo', pageWidth / 2, 33, { align: 'center' });
+    
+    yPos = 50;
+    
+    // --- DADOS DO IMÓVEL ---
+    doc.setTextColor(27, 58, 45);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('1. Dados do Imóvel', marginLeft, yPos);
+    yPos += 8;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    const dadosImovel = [
+      ['Nome do Imóvel:', getVal('f-nome') || 'Não informado'],
+      ['Município/UF:', getVal('f-municipio') || 'Não informado'],
+      ['Área:', (getVal('f-area') || '0') + ' ha'],
+      ['Perímetro:', (getVal('f-perimetro') || '0') + ' m'],
+      ['Matrícula:', getVal('f-matricula') || 'Não informado'],
+      ['CCIR:', getVal('f-ccir') || 'Não informado'],
+      ['CNS/INCRA:', getVal('f-cns') || 'Não informado'],
+      ['Datum/Fuso:', getVal('f-datum') || 'Não informado']
+    ];
+    
+    dadosImovel.forEach(([label, value]) => {
+      doc.setTextColor(85, 85, 85);
+      doc.text(label, marginLeft, yPos);
+      doc.setTextColor(0, 0, 0);
+      doc.text(value, marginLeft + 55, yPos);
+      yPos += 6;
+    });
+    
+    yPos += 8;
+    
+    // --- PASSIVO AMBIENTAL (se disponível) ---
+    if (S.passivoAmbiental) {
+      doc.setTextColor(27, 58, 45);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('2. Passivo Ambiental', marginLeft, yPos);
+      yPos += 8;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      
+      const passivo = S.passivoAmbiental;
+      const dadosPassivo = [
+        ['Bioma:', passivo.biomaNome],
+        ['Área Total:', passivo.areaTotalHa.toFixed(4) + ' ha'],
+        ['RL Mínima:', passivo.rl.percentualMinimo.toFixed(0) + '% (' + passivo.rl.minimaHa.toFixed(4) + ' ha)'],
+        ['Vegetação Existente:', passivo.vegetacaoExistenteHa.toFixed(4) + ' ha'],
+        ['Déficit RL:', passivo.rl.deficitHa.toFixed(4) + ' ha (' + passivo.rl.deficitPercentual.toFixed(2) + '%)'],
+        ['APP (30m):', passivo.app.ha30.toFixed(4) + ' ha'],
+        ['Déficit Total:', passivo.deficitTotalHa.toFixed(4) + ' ha'],
+        ['Custo Estimado:', 'R$ ' + passivo.custoRecuperacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })]
+      ];
+      
+      dadosPassivo.forEach(([label, value]) => {
+        doc.setTextColor(85, 85, 85);
+        doc.text(label, marginLeft, yPos);
+        doc.setTextColor(0, 0, 0);
+        doc.text(value, marginLeft + 65, yPos);
+        yPos += 6;
+      });
+      
+      yPos += 8;
+    }
+    
+    // --- COORDENADAS SIMCAR ---
+    doc.setTextColor(27, 58, 45);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('3. Coordenadas para o SIMCAR', marginLeft, yPos);
+    yPos += 8;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    const coords = [
+      ['Inf. Esq. Longitude:', getVal('f-inf-lon') || 'Não informado'],
+      ['Inf. Esq. Latitude:', getVal('f-inf-lat') || 'Não informado'],
+      ['Sup. Dir. Longitude:', getVal('f-sup-lon') || 'Não informado'],
+      ['Sup. Dir. Latitude:', getVal('f-sup-lat') || 'Não informado']
+    ];
+    
+    coords.forEach(([label, value]) => {
+      doc.setTextColor(85, 85, 85);
+      doc.text(label, marginLeft, yPos);
+      doc.setTextColor(0, 0, 0);
+      doc.text(value, marginLeft + 70, yPos);
+      yPos += 6;
+    });
+    
+    // --- RODAPÉ ---
+    const dataAtual = new Date().toLocaleString('pt-BR');
+    doc.setFontSize(9);
+    doc.setTextColor(128, 128, 128);
+    doc.text('Relatório gerado em: ' + dataAtual, pageWidth / 2, pageHeight - 15, { align: 'center' });
+    
+    // --- SALVAR PDF ---
+    const nomeArquivo = (getVal('f-nome') || 'relatorio-car-mt').replace(/\s+/g, '_').toLowerCase() + '.pdf';
+    doc.save(nomeArquivo);
+    toast('Relatório PDF baixado com sucesso!', 'ok');
   }
 };
 
@@ -1921,6 +2047,7 @@ function renderResult(r) {
       <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
         ${S.kml ? `<button class="btn-dl" onclick="dlKML()">⬇️ KML</button>` : ''}
         ${S.shapeData ? `<button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile</button>` : ''}
+        <button class="btn-dl" onclick="GeradorPDF.gerar()">📄 Relatório PDF</button>
       </div>
       <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem;">
         <button class="btn-print-r" onclick="window.print()">🖨️ Imprimir</button>
