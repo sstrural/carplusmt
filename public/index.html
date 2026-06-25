@@ -1227,6 +1227,13 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
       dados.area = validacao.area.areaCalculada;
     }
     
+    // Verificar se há vértices
+    if (!dados.vertices || dados.vertices.length < 3) {
+      toast('❌ Vértices insuficientes (encontrados: ' + (dados.vertices?.length || 0) + ').\n\nTentativas:\n1. Verifique se o PDF tem formato válido\n2. Copie e cole manualmente os vértices do memorial\n3. Desenhe o polígono no mapa', 'warn');
+      S.nomeImovel = dados.nome_imovel || 'Fazenda';
+      return dados;
+    }
+    
     const coords = dados.vertices.map(v => utmToLatLon(v.E, v.N, zona));
     const lats = coords.map(c => c.lat);
     const lons = coords.map(c => c.lon);
