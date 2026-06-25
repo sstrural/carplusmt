@@ -1229,6 +1229,16 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
     const zona = detectarFusoUTM(dados.vertices);
     S.vertices = dados.vertices;
     
+    // Auto-atualizar dropdown de datum baseado no fuso detectado
+    const datumSel = $('f-datum');
+    if (zona === 20) {
+      datumSel.value = 'SIRGAS2000_20S';
+    } else if (zona === 22) {
+      datumSel.value = 'SIRGAS2000_22S';
+    } else {
+      datumSel.value = 'SIRGAS2000_21S';
+    }
+    
     // NOVA VALIDAÇÃO GEOMÉTRICA
     const areaDeclarada = parseFloat((dados.area || '0').replace(',', '.')) || 0;
     const validacao = geometrico.validarCompleto(dados.vertices, areaDeclarada);
