@@ -1221,7 +1221,8 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
     
     // Gerar múltiplos formatos
     S.kml = buildKML(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
-    S.csv = buildSHP(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
+    S.geojson = buildGeoJSON(dados.vertices, coords, dados);
+    S.csv = buildCSV(dados.vertices, coords);
     S.wkt = buildWKT(coords);
     S.geojson = buildGeoJSON(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
   }
@@ -1357,6 +1358,83 @@ ${closeCoord}
 ${placemarks}
   </Document>
 </kml>`;
+}
+
+// ── GERAR GEOJSON (Compatível com QGIS, ArcGIS, SIGEF) ──
+function buildGeoJSON(vertices, coords, dados) {
+  const geojson = {
+    type: "FeatureCollection",
+    crs: {
+      type: "name",
+      properties: { name: "urn:ogc:def:crs:EPSG::4674" } // SIRGAS2000
+    },
+    features: [
+      {
+        type: "Feature",
+        properties: {
+          nome: dados.nome_imovel || 'Imóvel Rural',
+          area_ha: parseFloat((dados.area || '0').replace(',', '.')) || 0,
+          perimetro_m: parseFloat(dados.perimetro || '0'),
+          municipio: dados.municipio,
+          uf: dados.uf || 'MT',
+          matricula: dados.matricula,
+          ccir: dados.ccir,
+          cns: dados.cns,
+          proprietario: dados.prop_nome,
+          cpf: dados.prop_cpf,
+          datum: 'SIRGAS2000',
+          fuso_utm: (dados.meridiano_central || '').includes('51') ? '22S' : '21S',
+          vertices_total: vertices.length,
+          gerado_por: 'CAR-MT Analisador',
+          gerado_em: new Date().toISOString()
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            coords.map(c => [parseFloat(c.lon.toFixed(8)), parseFloat(c.lat.toFixed(8))])
+              .concat([[parseFloat(coords[0].lon.toFixed(8)), parseFloat(coords[0].lat.toFixed(8))]])
+          ]
+        }
+      }
+    ]
+  };
+  
+  // Adicionar pontos dos vértices
+  vertices.forEach((v, i) => {
+    geojson.features.push({
+      type: "Feature",
+      properties: {
+        vertice: v.nome || `V${i+1}`,
+        coord_e_utm: v.E,
+        coord_n_utm: v.N,
+        latitude: parseFloat(coords[i].lat.toFixed(8)),
+        longitude: parseFloat(coords[i].lon.toFixed(8)),
+        ordem: i + 1
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [parseFloat(coords[i].lon.toFixed(8)), parseFloat(coords[i].lat.toFixed(8))]
+      }
+    });
+  });
+  
+  return geojson;
+}
+
+// ── GERAR CSV DOS VÉRTICES ──
+function buildCSV(vertices, coords) {
+  let csv = 'vertice,coord_e_utm,coord_n_utm,latitude,longitude,ordem\n';
+  vertices.forEach((v, i) => {
+    csv += `"${v.nome || 'V'+(i+1)}",${v.E},${v.N},${coords[i].lat.toFixed(8)},${coords[i].lon.toFixed(8)},${i+1}\n`;
+  });
+  return csv;
+}
+
+// ── GERAR WKT (Well-Known Text) ──
+function buildWKT(coords) {
+  const points = coords.map(c => `${c.lon.toFixed(8)} ${c.lat.toFixed(8)}`).join(', ');
+  const firstPoint = `${coords[0].lon.toFixed(8)} ${coords[0].lat.toFixed(8)}`;
+  return `POLYGON((${points}, ${firstPoint}))`;
 }
 
 // ── PREENCHER FORMULÁRIO ──
