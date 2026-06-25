@@ -710,129 +710,6 @@ function distancePointToSegment(point, a, b) {
 }
 
 /**
- * TASK 2.3: Validate and reproject coordinates to SIRGAS2000 if necessary
- * Checks CRS property and validates UTM zone 21S for Mato Grosso
- *
- * @param {Object} feature - GeoJSON Feature
- * @param {string} expectedProjection - Expected projection (default: 'SIRGAS2000')
- * @returns {Object} Validation result: { valid: bool, originalCRS: string, message: string, reprojectionNeeded: bool }
- * @example
- * const result = validateProjection(feature, 'SIRGAS2000');
- * if (!result.valid) console.error(result.message);
- */
-export function validateProjection(feature, expectedProjection = 'SIRGAS2000') {
-  const crs = feature.properties?.crs || feature.properties?.projection || 'unknown';
-  
-  // Define known CRS identifiers
-  const knownCRS = {
-    'SIRGAS2000': 'EPSG:4674',
-    'WGS84': 'EPSG:4326',
-    'SAD69': 'EPSG:4618',
-    'WebMercator': 'EPSG:3857',
-    'UTM20S': 'EPSG:31980', // SIRGAS2000 UTM Zone 20S
-    'UTM21S': 'EPSG:31981', // SIRGAS2000 UTM Zone 21S
-    'UTM22S': 'EPSG:31982', // SIRGAS2000 UTM Zone 22S
-  };
-
-  // Mato Grosso spans 3 UTM zones: 20S (west), 21S (center), 22S (east)
-  const validMTZones = ['20S', '21S', '22S'];
-  const zoneDescriptions = {
-    '20S': 'Oeste do MT (Cáceres, Vila Bela, Porto Esperidião)',
-    '21S': 'Centro do MT (Cuiabá, Sorriso, Sapezal, Tangará da Serra)',
-    '22S': 'Leste do MT (Canarana, Água Boa, Nova Xavantina)',
-  };
-
-  // Check if CRS is already SIRGAS2000
-  if (crs === expectedProjection || crs === knownCRS[expectedProjection]) {
-    // Validate UTM zone for Mato Grosso (accepts 20S, 21S, or 22S)
-    const utmZone = feature.properties?.utm_zone || '21S';
-    if (!validMTZones.includes(utmZone)) {
-      return {
-        valid: false,
-        originalCRS: crs,
-        message: `Invalid UTM zone: ${utmZone}. Mato Grosso uses UTM Zones 20S, 21S, or 22S.`,
-        reprojectionNeeded: false,
-      };
-    }
-
-    // Validate coordinates are within reasonable bounds for MT
-    // MT bounds (approximate): lat -6 to -18, lon -48 to -62
-    const coordinates = feature.geometry?.type === 'Polygon' 
-      ? feature.geometry.coordinates[0] 
-      : feature.geometry?.coordinates || [];
-    
-    if (coordinates.length > 0) {
-      const [lon, lat] = coordinates[0];
-      if (lon < -62 || lon > -48 || lat < -19 || lat > -5) {
-        return {
-          valid: false,
-          originalCRS: crs,
-          message: `Coordinates appear to be outside Mato Grosso bounds. Please verify: Lon=${lon}, Lat=${lat}`,
-          reprojectionNeeded: false,
-        };
-      }
-    }
-
-    return {
-      valid: true,
-      originalCRS: crs,
-      utm_zone: utmZone,
-      message: `Coordinates are in valid SIRGAS2000 UTM ${utmZone} projection (${zoneDescriptions[utmZone]}).`,
-      reprojectionNeeded: false,
-    };
-  }
-
-  // Determine if reprojection is needed
-  const needsReprojection = crs !== expectedProjection && crs !== 'unknown';
-
-  // Map known CRS that can be reprojected
-  let reprojectionNeeded = false;
-  let supportedFormat = true;
-
-  if (crs === 'WGS84' || crs === knownCRS['WGS84']) {
-    reprojectionNeeded = true;
-  } else if (crs === 'SAD69' || crs === knownCRS['SAD69']) {
-    reprojectionNeeded = true;
-  } else if (crs === 'WebMercator' || crs === knownCRS['WebMercator']) {
-    reprojectionNeeded = true;
-  } else if (crs === 'unknown') {
-    return {
-      valid: true,
-      originalCRS: crs,
-      message: 'CRS not specified. Assuming SIRGAS2000 UTM 21S. Verify coordinates if needed.',
-      reprojectionNeeded: false,
-    };
-  } else {
-    supportedFormat = false;
-  }
-
-  if (!supportedFormat) {
-    return {
-      valid: false,
-      originalCRS: crs,
-      message: `Unsupported CRS: ${crs}. Supported formats: SIRGAS2000, WGS84, SAD69, WebMercator. Manual reprojection required.`,
-      reprojectionNeeded: false,
-    };
-  }
-
-  if (reprojectionNeeded) {
-    return {
-      valid: true,
-      originalCRS: crs,
-      message: `Reprojection required from ${crs} to SIRGAS2000. Note: Automated reprojection not yet implemented. Use proj4js or QGIS for conversion.`,
-      reprojectionNeeded: true,
-    };
-  }
-
-  return {
-    valid: true,
-    originalCRS: crs,
-    message: `Projection validation complete. CRS: ${crs}`,
-    reprojectionNeeded: false,
-  };
-}
-
-/**
  * TASK 3.2: Merge overlapping nascente buffers to avoid double-counting
  * Uses Turf.union() to combine overlapping circular buffers
  *
@@ -921,7 +798,216 @@ export function flagBoundaryNascentes(nascentes = [], imovelPolygon, threshold =
 }
 
 /**
- * Internal: Validate coordinate projection
+ * INTERNAL: Auto-detect UTM zone from coordinates
+ * Mato Grosso spans 3 UTM zones - determines which zone based on longitude
+ * 
+ * Zone boundaries (SIRGAS2000):
+ * - Zone 20S (EPSG:31980): -60° to -54°W (Oeste: Cáceres, Vila Bela)
+ * - Zone 21S (EPSG:31981): -54° to -48°W (Centro: Cuiabá, Sorriso, Sapezal)
+ * - Zone 22S (EPSG:31982): -48° to -42°W (Leste: Canarana, Água Boa)
+ * 
+ * @private
+ * @param {Array<number>} coordinates - [longitude, latitude] in decimal degrees
+ * @returns {Object} { zone: '21S', epsg: 31981, description: '...' }
+ */
+function detectUTMZoneFromCoordinates(coordinates) {
+  if (!coordinates || coordinates.length < 2) {
+    // Default to center zone if no coordinates provided
+    return { 
+      zone: '21S', 
+      epsg: 31981, 
+      description: 'Centro do MT (padrão: Cuiabá, Sorriso, Sapezal, Tangará da Serra)' 
+    };
+  }
+
+  const [lon, lat] = coordinates;
+  
+  // Validate that coordinates are in decimal degree format (reasonable for MT)
+  if (lon < -62 || lon > -42 || lat < -19 || lat > -5) {
+    console.warn(`Coordinates outside expected MT range: lon=${lon}, lat=${lat}`);
+    return { 
+      zone: '21S', 
+      epsg: 31981, 
+      description: 'Centro do MT (default due to out-of-bounds coords)' 
+    };
+  }
+
+  // Determine zone based on longitude (UTM zone width = 6°)
+  let zone = '21S';
+  let epsg = 31981;
+  let description = 'Centro do MT (Cuiabá, Sorriso, Sapezal, Tangará da Serra)';
+
+  if (lon < -54) {
+    // Zone 20S: -60° to -54°
+    zone = '20S';
+    epsg = 31980;
+    description = 'Oeste do MT (Cáceres, Vila Bela, Porto Esperidião)';
+  } else if (lon >= -54 && lon < -48) {
+    // Zone 21S: -54° to -48° (CENTER - MOST COMMON)
+    zone = '21S';
+    epsg = 31981;
+    description = 'Centro do MT (Cuiabá, Sorriso, Sapezal, Tangará da Serra)';
+  } else if (lon >= -48) {
+    // Zone 22S: -48° and east
+    zone = '22S';
+    epsg = 31982;
+    description = 'Leste do MT (Canarana, Água Boa, Nova Xavantina)';
+  }
+
+  return { zone, epsg, description };
+}
+
+/**
+ * TASK 2.3: Validate projection and auto-detect UTM zone
+ * Detects CRS from feature properties and ensures SIRGAS2000 compliance
+ * AUTO-DETECTS which of the 3 Mato Grosso UTM zones (20S, 21S, 22S) based on coordinates
+ * Supports reprojection hints for WGS84, SAD69, and WebMercator
+ *
+ * @param {Object} feature - GeoJSON feature with geometry and optional properties.crs
+ * @param {string} expectedProjection - Expected projection (default: 'SIRGAS2000')
+ * @returns {Object} Validation result with detected utm_zone, detectedZone, and reprojectionNeeded flag
+ * @example
+ * const result = validateProjection(feature, 'SIRGAS2000');
+ * console.log(result.detectedZone);  // '21S' - auto-detected from coordinates
+ * console.log(result.utm_zone);      // Actual zone used (may differ if explicitly set)
+ * if (result.reprojectionNeeded) { ... use QGIS to convert ... }
+ */
+export function validateProjection(feature, expectedProjection = 'SIRGAS2000') {
+  const crs = feature.properties?.crs || feature.properties?.projection || 'unknown';
+  
+  // Define known CRS identifiers
+  const knownCRS = {
+    'SIRGAS2000': 'EPSG:4674',
+    'WGS84': 'EPSG:4326',
+    'SAD69': 'EPSG:4618',
+    'WebMercator': 'EPSG:3857',
+    'UTM20S': 'EPSG:31980', // SIRGAS2000 UTM Zone 20S
+    'UTM21S': 'EPSG:31981', // SIRGAS2000 UTM Zone 21S
+    'UTM22S': 'EPSG:31982', // SIRGAS2000 UTM Zone 22S
+  };
+
+  // Valid zones for Mato Grosso
+  const validMTZones = ['20S', '21S', '22S'];
+
+  // Extract first coordinate pair to detect zone automatically
+  let coordinates = [];
+  try {
+    if (feature.geometry?.type === 'Polygon') {
+      coordinates = feature.geometry.coordinates[0][0];
+    } else if (feature.geometry?.type === 'LineString') {
+      coordinates = feature.geometry.coordinates[0];
+    } else if (feature.geometry?.type === 'Point') {
+      coordinates = feature.geometry.coordinates;
+    } else if (feature.geometry?.coordinates) {
+      // Try to extract first coordinate
+      let temp = feature.geometry.coordinates;
+      while (Array.isArray(temp) && Array.isArray(temp[0])) {
+        temp = temp[0];
+      }
+      coordinates = temp;
+    }
+  } catch (e) {
+    console.warn('Error extracting coordinates for zone detection:', e);
+    coordinates = [];
+  }
+
+  // AUTO-DETECT UTM zone from coordinates
+  const detectedZone = detectUTMZoneFromCoordinates(coordinates);
+  const utmZone = feature.properties?.utm_zone || detectedZone.zone;
+
+  // Check if CRS is already SIRGAS2000 (or assuming it is)
+  if (crs === expectedProjection || crs === knownCRS[expectedProjection] || crs === 'unknown') {
+    // Validate UTM zone for Mato Grosso (accepts 20S, 21S, or 22S)
+    if (feature.properties?.utm_zone && !validMTZones.includes(feature.properties.utm_zone)) {
+      return {
+        valid: false,
+        originalCRS: crs,
+        utm_zone: utmZone,
+        detectedZone: detectedZone.zone,
+        epsg: detectedZone.epsg,
+        message: `Invalid UTM zone in properties: ${feature.properties.utm_zone}. Mato Grosso uses 20S, 21S, or 22S. Auto-detected: ${detectedZone.zone} (${detectedZone.description})`,
+        reprojectionNeeded: false,
+      };
+    }
+
+    // Validate coordinates are within reasonable bounds for MT
+    if (coordinates.length >= 2) {
+      const [lon, lat] = coordinates;
+      if (lon < -62 || lon > -42 || lat < -19 || lat > -5) {
+        return {
+          valid: false,
+          originalCRS: crs,
+          utm_zone: utmZone,
+          detectedZone: detectedZone.zone,
+          epsg: detectedZone.epsg,
+          message: `Coordinates outside Mato Grosso bounds: lon=${lon}, lat=${lat}. Expected zone: ${detectedZone.zone}`,
+          reprojectionNeeded: false,
+        };
+      }
+    }
+
+    return {
+      valid: true,
+      originalCRS: crs,
+      utm_zone: utmZone,
+      detectedZone: detectedZone.zone,
+      epsg: detectedZone.epsg,
+      message: `✓ SIRGAS2000 UTM ${utmZone} (${detectedZone.description})`,
+      reprojectionNeeded: false,
+    };
+  }
+
+  // Handle known CRS that need reprojection
+  let reprojectionNeeded = false;
+  let supportedFormat = true;
+
+  if (crs === 'WGS84' || crs === knownCRS['WGS84']) {
+    reprojectionNeeded = true;
+  } else if (crs === 'SAD69' || crs === knownCRS['SAD69']) {
+    reprojectionNeeded = true;
+  } else if (crs === 'WebMercator' || crs === knownCRS['WebMercator']) {
+    reprojectionNeeded = true;
+  } else {
+    supportedFormat = false;
+  }
+
+  if (!supportedFormat) {
+    return {
+      valid: false,
+      originalCRS: crs,
+      utm_zone: utmZone,
+      detectedZone: detectedZone.zone,
+      epsg: detectedZone.epsg,
+      message: `Unsupported CRS: ${crs}. Supported: SIRGAS2000, WGS84, SAD69, WebMercator. Expected zone: ${detectedZone.zone}. Use QGIS or proj4js for conversion.`,
+      reprojectionNeeded: false,
+    };
+  }
+
+  if (reprojectionNeeded) {
+    return {
+      valid: true,
+      originalCRS: crs,
+      utm_zone: utmZone,
+      detectedZone: detectedZone.zone,
+      epsg: detectedZone.epsg,
+      message: `Reprojection required: ${crs} → SIRGAS2000 UTM ${detectedZone.zone}. Use QGIS or proj4js for conversion.`,
+      reprojectionNeeded: true,
+    };
+  }
+
+  return {
+    valid: true,
+    originalCRS: crs,
+    utm_zone: utmZone,
+    detectedZone: detectedZone.zone,
+    epsg: detectedZone.epsg,
+    message: `Projection OK. Expected zone: ${detectedZone.zone}`,
+    reprojectionNeeded: false,
+  };
+}
+
+/**
+ * Internal: Validate coordinate projection (simplified)
  *
  * @private
  * @param {Object} feature - GeoJSON Feature
@@ -929,7 +1015,7 @@ export function flagBoundaryNascentes(nascentes = [], imovelPolygon, threshold =
  * @throws {Error} If projection is invalid
  */
 function validateProjectionInternal(feature, expectedProjection) {
-  // Simplified validation - in production, would check against known CRS definitions
+  // Simplified validation - use validateProjection() for full validation with zone detection
   if (feature.properties?.crs && feature.properties.crs !== expectedProjection) {
     console.warn(
       `Projection mismatch: feature is ${feature.properties.crs}, expected ${expectedProjection}. ` +
