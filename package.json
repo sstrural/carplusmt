@@ -1,0 +1,22 @@
+{
+  "name": "car-mt-analisador",
+  "version": "1.0.0",
+  "description": "Sistema para processar memoriais descritivos de imóveis rurais e gerar relatórios para o SIMCAR-MT",
+  "main": "index.html",
+  "keywords": [
+    "CAR",
+    "SIMCAR",
+    "memorial-descritivo", 
+    "georreferenciamento",
+    "mato-grosso",
+    "SEMA-MT",
+    "imóvel-rural"
+  ],
+  "author": "SEMA-MT",
+  "license": "MIT",
+  "homepage": "https://github.com/sema-mt/car-mt-analisador",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sema-mt/car-mt-analisador.git"
+  }
+}
