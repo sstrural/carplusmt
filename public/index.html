@@ -1053,6 +1053,21 @@ class ValidadorGeometrico {
     this.tolerancia = 0.01; // 1cm de tolerância para fechamento
   }
 
+  // Garante que o polígono esteja fechado
+  garantirFechamento(vertices) {
+    if (vertices.length < 3) return vertices;
+    const primeiro = vertices[0];
+    const ultimo = vertices[vertices.length - 1];
+    const distancia = Math.sqrt(
+      Math.pow(ultimo.E - primeiro.E, 2) + Math.pow(ultimo.N - primeiro.N, 2)
+    );
+    if (distancia > this.tolerancia) {
+      // Adiciona o primeiro vértice no final para fechar o polígono
+      return [...vertices, { ...primeiro }];
+    }
+    return vertices;
+  }
+
   // Valida se o polígono fecha geometricamente
   validarFechamento(vertices) {
     if (vertices.length < 3) return { valido: false, erro: 'Mínimo 3 vértices necessários' };
@@ -1066,22 +1081,24 @@ class ValidadorGeometrico {
     
     return {
       valido: distancia <= this.tolerancia,
-      erro: distancia > this.tolerancia ? `Polígono não fecha. Distância: ${distancia.toFixed(3)}m` : null,
-      distanciaFechamento: distancia
+      erro: distancia > this.tolerancia ? `Polígono não fecha. Distância: ${distancia.toFixed(3)}m. O sistema fechou o polígono automaticamente.` : null,
+      distanciaFechamento: distancia,
+      fechadoAutomaticamente: distancia > this.tolerancia
     };
   }
 
   // Calcula área pelos vértices (fórmula de Shoelace)
   calcularAreaVertices(vertices) {
-    if (vertices.length < 3) return 0;
+    const verticesFechados = this.garantirFechamento(vertices);
+    if (verticesFechados.length < 3) return 0;
     
     let area = 0;
-    const n = vertices.length;
+    const n = verticesFechados.length;
     
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      area += vertices[i].E * vertices[j].N;
-      area -= vertices[j].E * vertices[i].N;
+      area += verticesFechados[i].E * verticesFechados[j].N;
+      area -= verticesFechados[j].E * verticesFechados[i].N;
     }
     
     return Math.abs(area) / 2 / 10000; // Converter m² para hectares
@@ -1091,7 +1108,7 @@ class ValidadorGeometrico {
   validarArea(areaDeclarada, vertices) {
     const areaCalculada = this.calcularAreaVertices(vertices);
     const diferenca = Math.abs(areaDeclarada - areaCalculada);
-    const percentualDiferenca = (diferenca / areaDeclarada) * 100;
+    const percentualDiferenca = areaDeclarada > 0 ? (diferenca / areaDeclarada) * 100 : 0;
     
     return {
       valido: percentualDiferenca <= 2, // Tolerância de 2%
@@ -1105,19 +1122,20 @@ class ValidadorGeometrico {
 
   // Detecta auto-interseções (polígono que se cruza)
   detectarAutoIntersecao(vertices) {
+    const verticesFechados = this.garantirFechamento(vertices);
     const intersecoes = [];
     
-    for (let i = 0; i < vertices.length - 1; i++) {
-      for (let j = i + 2; j < vertices.length - 1; j++) {
-        if (i === 0 && j === vertices.length - 2) continue; // Pular última conexão
+    for (let i = 0; i < verticesFechados.length - 1; i++) {
+      for (let j = i + 2; j < verticesFechados.length - 1; j++) {
+        if (i === 0 && j === verticesFechados.length - 2) continue; // Pular última conexão
         
-        const seg1 = { p1: vertices[i], p2: vertices[i + 1] };
-        const seg2 = { p1: vertices[j], p2: vertices[j + 1] };
+        const seg1 = { p1: verticesFechados[i], p2: verticesFechados[i + 1] };
+        const seg2 = { p1: verticesFechados[j], p2: verticesFechados[j + 1] };
         
         if (this.segmentosSeIntersectam(seg1, seg2)) {
           intersecoes.push({
-            segmento1: `${vertices[i].nome} - ${vertices[i + 1].nome}`,
-            segmento2: `${vertices[j].nome} - ${vertices[j + 1].nome}`
+            segmento1: `${verticesFechados[i].nome} - ${verticesFechados[i + 1].nome}`,
+            segmento2: `${verticesFechados[j].nome} - ${verticesFechados[j + 1].nome}`
           });
         }
       }
@@ -1148,12 +1166,15 @@ class ValidadorGeometrico {
 
   // Validação completa do polígono
   validarCompleto(vertices, areaDeclarada) {
+    // Fecha o polígono automaticamente para validação e cálculos
+    const verticesFechados = this.garantirFechamento(vertices);
     const resultados = {
       fechamento: this.validarFechamento(vertices),
-      area: this.validarArea(areaDeclarada, vertices),
-      intersecoes: this.detectarAutoIntersecao(vertices),
-      vertices: vertices.length,
-      perimetro: this.calcularPerimetro(vertices)
+      area: this.validarArea(areaDeclarada, verticesFechados),
+      intersecoes: this.detectarAutoIntersecao(verticesFechados),
+      vertices: verticesFechados.length,
+      perimetro: this.calcularPerimetro(verticesFechados),
+      verticesFechados: verticesFechados // Armazena para uso posterior
     };
 
     const erros = [];
@@ -1172,12 +1193,13 @@ class ValidadorGeometrico {
 
   // Calcula perímetro do polígono
   calcularPerimetro(vertices) {
+    const verticesFechados = this.garantirFechamento(vertices);
     let perimetro = 0;
-    for (let i = 0; i < vertices.length; i++) {
-      const j = (i + 1) % vertices.length;
+    for (let i = 0; i < verticesFechados.length; i++) {
+      const j = (i + 1) % verticesFechados.length;
       const dist = Math.sqrt(
-        Math.pow(vertices[j].E - vertices[i].E, 2) + 
-        Math.pow(vertices[j].N - vertices[i].N, 2)
+        Math.pow(verticesFechados[j].E - verticesFechados[i].E, 2) + 
+        Math.pow(verticesFechados[j].N - verticesFechados[i].N, 2)
       );
       perimetro += dist;
     }
@@ -1189,18 +1211,22 @@ class ValidadorGeometrico {
 const geometrico = new ValidadorGeometrico();
 async function extrairComIA(texto, nextStep) {
   const prompt = `Você é especialista em georreferenciamento rural e CAR no Brasil.
-Analise este memorial descritivo e extraia TODOS os dados.
+Analise este memorial descritivo e extraia TODOS os dados com atenção especial aos vértices.
 
 MEMORIAL:
 ${texto.substring(0, 7000)}
 
-IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto antes ou depois, sem markdown.
-Use "" para campos ausentes. Não adicione vírgulas após o último item de cada array ou objeto.
+INSTRUÇÕES IMPORTANTES:
+1. Extraia TODOS os vértices em ordem, incluindo o vértice final que fecha o polígono (mesmo que seja o mesmo que o inicial)
+2. Para cada vértice, extraia o nome, coordenada E (Este) e coordenada N (Norte) em UTM
+3. Retorne APENAS um objeto JSON válido, sem texto antes ou depois, sem markdown
+4. Use "" para campos ausentes
+5. Não adicione vírgulas após o último item de cada array ou objeto
 
 Formato esperado:
 {"nome_imovel":"","municipio":"","uf":"MT","area":"","perimetro":"","matricula":"","ccir":"","cns":"","datum":"","meridiano_central":"","fuso":"","finalidade_car":"","prop_nome":"","prop_cpf":"","eng_nome":"","eng_crea":"","eng_incra":"","eng_art":"","data_levantamento":"","local_levantamento":"","confrontantes":"","ponto_inicial":"","ponto_final":"","total_vertices":0,"vertices":[{"nome":"EFDA-M-0207","E":299850.79,"N":8543511.77}],"observacoes":""}
 
-Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para datas.`;
+Use formato YYYY-MM-DD para datas.`;
 
   const raw = await callAPI({ messages: [{ role: 'user', content: prompt }], maxTokens: 2000 });
   await nextStep(300);
@@ -1229,19 +1255,23 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
     const validacao = geometrico.validarCompleto(dados.vertices, areaDeclarada);
     S.validacaoGeometrica = validacao;
     
+    // Usar os vértices fechados para geração de KML e Shapefile
+    const verticesParaUso = validacao.verticesFechados || dados.vertices;
+    S.vertices = verticesParaUso;
+    
     // Atualizar área com a calculada se válida
     if (validacao.valido && areaDeclarada === 0) {
       dados.area = validacao.area.areaCalculada;
     }
     
     // Verificar se há vértices
-    if (!dados.vertices || dados.vertices.length < 3) {
-      toast('❌ Vértices insuficientes (encontrados: ' + (dados.vertices?.length || 0) + ').\n\nTentativas:\n1. Verifique se o PDF tem formato válido\n2. Copie e cole manualmente os vértices do memorial\n3. Desenhe o polígono no mapa', 'warn');
+    if (!verticesParaUso || verticesParaUso.length < 3) {
+      toast('❌ Vértices insuficientes (encontrados: ' + (verticesParaUso?.length || 0) + ').\n\nTentativas:\n1. Verifique se o PDF tem formato válido\n2. Copie e cole manualmente os vértices do memorial\n3. Desenhe o polígono no mapa', 'warn');
       S.nomeImovel = dados.nome_imovel || 'Fazenda';
       return dados;
     }
     
-    const coords = dados.vertices.map(v => utmToLatLon(v.E, v.N, zona));
+    const coords = verticesParaUso.map(v => utmToLatLon(v.E, v.N, zona));
     const lats = coords.map(c => c.lat);
     const lons = coords.map(c => c.lon);
     dados.simcar = {
@@ -1252,8 +1282,8 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
     };
     
     // Gerar múltiplos formatos
-    S.kml = buildKML(dados.vertices, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
-    S.shapeData = buildShapeFeatureCollection(dados.vertices, coords, dados, zona);
+    S.kml = buildKML(verticesParaUso, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
+    S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, dados, zona);
   }
 
   S.nomeImovel = dados.nome_imovel || 'Fazenda';
@@ -1546,10 +1576,41 @@ function revalidarGeometria() {
   const validacao = geometrico.validarCompleto(S.vertices, areaDeclarada);
   S.validacaoGeometrica = validacao;
   
+  // Usar os vértices fechados para gerar KML e Shapefile
+  const verticesParaUso = validacao.verticesFechados || S.vertices;
+  S.vertices = verticesParaUso;
+  
+  // Reconstruir KML e Shapefile
+  const zona = detectUTMZoneFromMetadata({}); // Podemos detectar pelo datum selecionado
+  const datumVal = getVal('f-datum');
+  let zonaDetectada = 21;
+  if (datumVal.includes('20')) zonaDetectada = 20;
+  if (datumVal.includes('22')) zonaDetectada = 22;
+  const coords = verticesParaUso.map(v => utmToLatLon(v.E, v.N, zonaDetectada));
+  S.kml = buildKML(verticesParaUso, coords, S.nomeImovel || 'Fazenda', getVal('f-area'), '');
+  S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, {
+    nome_imovel: S.nomeImovel,
+    area: getVal('f-area'),
+    perimetro: getVal('f-perimetro'),
+    municipio: getVal('f-municipio'),
+    uf: 'MT',
+    matricula: getVal('f-matricula'),
+    ccir: getVal('f-ccir'),
+    cns: getVal('f-cns'),
+    prop_nome: getVal('f-prop-nome'),
+    prop_cpf: getVal('f-prop-cpf'),
+    datum: getVal('f-datum'),
+    fuso: `${zonaDetectada}S`,
+    meridiano: zonaDetectada === 20 ? '-63' : zonaDetectada === 22 ? '-51' : '-57',
+    verts_tot: verticesParaUso.length,
+    gerado_por: 'CAR-MT Analisador',
+    gerado_em: new Date().toISOString()
+  }, zonaDetectada);
+  
   mostrarValidacaoGeometrica(validacao);
   
   if (validacao.valido) {
-    toast('Geometria validada com sucesso!', 'ok');
+    toast('Geometria validada com sucesso! KML e Shapefile atualizados.', 'ok');
   } else {
     toast(`${validacao.erros.length} erro(s) encontrado(s)`, 'erro');
   }
