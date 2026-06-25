@@ -596,7 +596,8 @@ textarea {
           <div>
             <label>Datum / Fuso UTM</label>
             <select id="f-datum">
-              <option value="SIRGAS2000_21S">SIRGAS2000 – Fuso 21S (MC 57°W)</option>
+              <option value="SIRGAS2000_20S">SIRGAS2000 – Fuso 20S (MC 63°W)</option>
+              <option value="SIRGAS2000_21S" selected>SIRGAS2000 – Fuso 21S (MC 57°W)</option>
               <option value="SIRGAS2000_22S">SIRGAS2000 – Fuso 22S (MC 51°W)</option>
               <option value="SAD69_21S">SAD69 – Fuso 21S</option>
             </select>
@@ -1192,11 +1193,40 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
   const raw = await callAPI({ messages: [{ role: 'user', content: prompt }], maxTokens: 2000 });
   await nextStep(300);
 
+  // ── AUTO-DETECTAR FUSO UTM BASEADO NAS COORDENADAS E ──
+  function detectarFusoUTM(vertices) {
+    if (!vertices || vertices.length === 0) return 21; // Default fuso 21
+    
+    // Pegar primeira coordenada E válida
+    const primeiroE = vertices.find(v => v.E && v.E > 0)?.E || 500000;
+    
+    // Fuso 20S: E entre 160.000 e 830.000 (MC -63°W, -60° a -66°)
+    // Fuso 21S: E entre 160.000 e 830.000 (MC -57°W, -54° a -60°)  
+    // Fuso 22S: E entre 160.000 e 830.000 (MC -51°W, -48° a -54°)
+    
+    // Regiões aproximadas de MT por fuso:
+    // Fuso 20S: Oeste extremo (Cáceres oeste, Vila Bela)
+    // Fuso 21S: Centro (Cuiabá, Sorriso, Sapezal) - MAIORIA
+    // Fuso 22S: Leste (Água Boa, Canarana, Barra do Garças)
+    
+    if (primeiroE < 300000) {
+      // Valores baixos de E = mais a oeste = pode ser fuso 20
+      return 20;
+    } else if (primeiroE > 700000) {
+      // Valores altos de E = mais a leste = pode ser fuso 22
+      return 22;
+    } else {
+      // Valores médios = fuso 21 (centro de MT)
+      return 21;
+    }
+  }
+
   const dados = parseJSON(raw);
 
   // Calcular coords SIMCAR e KML a partir dos vértices
   if (dados.vertices && dados.vertices.length >= 3) {
-    const zona = (dados.meridiano_central || dados.fuso || '').includes('51') ? 22 : 21;
+    // Auto-detectar fuso baseado nas coordenadas E (Leste)
+    const zona = detectarFusoUTM(dados.vertices);
     S.vertices = dados.vertices;
     
     // NOVA VALIDAÇÃO GEOMÉTRICA
@@ -1235,7 +1265,12 @@ Extraia TODOS os vértices com coordenadas E e N. Use formato YYYY-MM-DD para da
 function utmToLatLon(E, N, zona) {
   const k0 = 0.9996, a = 6378137.0, f = 1/298.257223563;
   const b = a*(1-f), e2 = 1-(b/a)**2, ep2 = e2/(1-e2);
-  const mc = zona === 22 ? -51 : -57;
+  
+  // Meridiano Central por fuso:
+  // Fuso 20S: MC -63°W (Oeste extremo de MT)
+  // Fuso 21S: MC -57°W (Centro de MT)
+  // Fuso 22S: MC -51°W (Leste de MT)
+  const mc = zona === 20 ? -63 : (zona === 22 ? -51 : -57);
 
   const x = E - 500000;
   const y = N - 10000000; // hemisfério sul
@@ -1457,9 +1492,15 @@ function preencherForm(d, texto, fileName) {
   setVal('f-eng-data', d.data_levantamento);
   setVal('f-eng-local', d.local_levantamento || d.municipio);
 
-  // Datum
+  // Datum - Auto-detectar fuso baseado no memorial
   const datumSel = $('f-datum');
-  if (d.meridiano_central?.includes('51') || d.fuso?.includes('22')) datumSel.value = 'SIRGAS2000_22S';
+  if (d.meridiano_central?.includes('63') || d.fuso?.includes('20')) {
+    datumSel.value = 'SIRGAS2000_20S';
+  } else if (d.meridiano_central?.includes('51') || d.fuso?.includes('22')) {
+    datumSel.value = 'SIRGAS2000_22S';
+  } else {
+    datumSel.value = 'SIRGAS2000_21S'; // Default para centro de MT
+  }
 
   // Finalidade
   const fin = (d.finalidade_car || '').toLowerCase();
