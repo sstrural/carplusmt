@@ -1527,7 +1527,16 @@ Use formato YYYY-MM-DD para datas.`;
     
     // Gerar múltiplos formatos
     S.kml = buildKML(verticesParaUso, coords, dados.nome_imovel || 'Fazenda', dados.area, dados.prop_nome);
-    S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, dados, zona);
+    const areaNum = parseFloat((dados.area || '0').replace(',', '.')) || 0;
+    const biomaVal = getVal('f-bioma');
+    const biomaNome = biomaVal === 'amz' ? 'Amazônia' : 'Cerrado';
+    S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, {
+      ...dados,
+      atp: areaNum,
+      air: areaNum,
+      bioma: biomaNome,
+      vegetacao_existente: parseFloat((getVal('f-vegetacao-existente') || '0').replace(',', '.')) || 0
+    }, zona);
   }
 
   S.nomeImovel = dados.nome_imovel || 'Fazenda';
@@ -1621,6 +1630,7 @@ ${placemarks}
 
 // ── GERAR COLEÇÃO ESPACIAL PARA SHAPEFILE ──
 function buildShapeFeatureCollection(vertices, coords, dados, zona) {
+  const areaNum = parseFloat((dados.area || '0').replace(',', '.')) || 0;
   const featureCollection = {
     type: "FeatureCollection",
     crs: {
@@ -1632,7 +1642,7 @@ function buildShapeFeatureCollection(vertices, coords, dados, zona) {
         type: "Feature",
         properties: {
           nome: dados.nome_imovel || 'Imóvel Rural',
-          area_ha: parseFloat((dados.area || '0').replace(',', '.')) || 0,
+          area_ha: areaNum,
           perim_m: parseFloat((dados.perimetro || '0').replace(',', '.')) || 0,
           municipio: dados.municipio || '',
           uf: dados.uf || 'MT',
@@ -1646,7 +1656,11 @@ function buildShapeFeatureCollection(vertices, coords, dados, zona) {
           meridiano: zona === 20 ? '-63' : zona === 22 ? '-51' : '-57',
           verts_tot: vertices.length,
           gerado_por: 'CAR-MT Analisador',
-          gerado_em: new Date().toISOString()
+          gerado_em: new Date().toISOString(),
+          atp: dados.atp || areaNum,
+          air: dados.air || areaNum,
+          bioma: dados.bioma || 'Cerrado',
+          vegetacao_existente: dados.vegetacao_existente || 0
         },
         geometry: {
           type: "Polygon",
@@ -1832,6 +1846,10 @@ function revalidarGeometria() {
   if (datumVal.includes('22')) zonaDetectada = 22;
   const coords = verticesParaUso.map(v => utmToLatLon(v.E, v.N, zonaDetectada));
   S.kml = buildKML(verticesParaUso, coords, S.nomeImovel || 'Fazenda', getVal('f-area'), '');
+  const areaNum = parseFloat((getVal('f-area') || '0').replace(',', '.')) || 0;
+  const biomaVal = getVal('f-bioma');
+  const biomaNome = biomaVal === 'amz' ? 'Amazônia' : 'Cerrado';
+  
   S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, {
     nome_imovel: S.nomeImovel,
     area: getVal('f-area'),
@@ -1848,7 +1866,11 @@ function revalidarGeometria() {
     meridiano: zonaDetectada === 20 ? '-63' : zonaDetectada === 22 ? '-51' : '-57',
     verts_tot: verticesParaUso.length,
     gerado_por: 'CAR-MT Analisador',
-    gerado_em: new Date().toISOString()
+    gerado_em: new Date().toISOString(),
+    atp: areaNum,
+    air: areaNum,
+    bioma: biomaNome,
+    vegetacao_existente: parseFloat((getVal('f-vegetacao-existente') || '0').replace(',', '.')) || 0
   }, zonaDetectada);
   
   mostrarValidacaoGeometrica(validacao);
