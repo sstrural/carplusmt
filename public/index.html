@@ -2176,16 +2176,19 @@ async function dlShapefile() {
     await loadScript('./vendor/shpwrite.js', () => window.shpwrite);
 
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
-    const shapefileZip = window.shpwrite.zip(S.shapeData, {
-      filename: nomeArquivo,
-      folder: nomeArquivo,
-      outputType: 'blob',
-      compression: 'STORE',
-      prj: getSIRGAS2000GeographicPRJ(),
-      types: {
-        polygon: 'perimetro',
-        point: 'vertices'
-      }
+    
+    // Simplificar: enviar apenas o polígono (remover os pontos para teste)
+    const geoJSONSimplificado = {
+      type: "FeatureCollection",
+      crs: {
+        type: "name",
+        properties: { name: "urn:ogc:def:crs:EPSG::4674" }
+      },
+      features: [S.shapeData.features[0]]
+    };
+
+    const shapefileZip = window.shpwrite.zip(geoJSONSimplificado, {
+      prj: getSIRGAS2000GeographicPRJ()
     });
 
     const blob = shapefileZip instanceof Blob ? shapefileZip : new Blob([shapefileZip], { type: 'application/zip' });
