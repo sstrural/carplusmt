@@ -2547,95 +2547,122 @@ function recusarValidacao() {
   toast('Edite os dados e revalide.', 'warn');
 }
 
+// ── UTILITÁRIO: Converter UTM → Lat/Lon (SIRGAS2000 = WGS84) ──
+function utmToLatLon(E, N, zona, hemisfério = 'S') {
+  // Constantes WGS84 / GRS80
+  const a = 6378137.0;
+  const f = 1 / 298.257222101;
+  const b = a * (1 - f);
+  const e2 = (a*a - b*b) / (a*a);
+  const e_p2 = e2 / (1 - e2);
+  const k0 = 0.9996;
+
+  const x = E - 500000.0;
+  let y = N;
+  if (hemisfério === 'S') y = N - 10000000.0;
+
+  const M = y / k0;
+  const mu = M / (a * (1 - e2/4 - 3*e2*e2/64 - 5*e2*e2*e2/256));
+
+  const e1 = (1 - Math.sqrt(1-e2)) / (1 + Math.sqrt(1-e2));
+  const phi1 = mu
+    + (3*e1/2 - 27*e1*e1*e1/32) * Math.sin(2*mu)
+    + (21*e1*e1/16 - 55*e1*e1*e1*e1/32) * Math.sin(4*mu)
+    + (151*e1*e1*e1/96) * Math.sin(6*mu);
+
+  const N1 = a / Math.sqrt(1 - e2 * Math.sin(phi1)*Math.sin(phi1));
+  const T1 = Math.tan(phi1)*Math.tan(phi1);
+  const C1 = e_p2 * Math.cos(phi1)*Math.cos(phi1);
+  const R1 = a*(1-e2) / Math.pow(1 - e2*Math.sin(phi1)*Math.sin(phi1), 1.5);
+  const D = x / (N1 * k0);
+
+  const lat = phi1 - (N1*Math.tan(phi1)/R1)*(
+    D*D/2
+    - (5 + 3*T1 + 10*C1 - 4*C1*C1 - 9*e_p2)*D*D*D*D/24
+    + (61 + 90*T1 + 298*C1 + 45*T1*T1 - 252*e_p2 - 3*C1*C1)*D*D*D*D*D*D/720
+  );
+
+  const lon0 = ((zona - 1)*6 - 180 + 3) * Math.PI / 180;
+  const lon = lon0 + (
+    D
+    - (1 + 2*T1 + C1)*D*D*D/6
+    + (5 - 2*C1 + 28*T1 - 3*C1*C1 + 8*e_p2 + 24*T1*T1)*D*D*D*D*D/120
+  ) / Math.cos(phi1);
+
+  return [lon * 180/Math.PI, lat * 180/Math.PI]; // [longitude, latitude]
+}
+
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
 async function dlShapefile() {
   if (!S.vertices || S.vertices.length < 3) {
     toast('Vértices não disponíveis para gerar Shapefile.', 'warn');
     return;
   }
-  
+
   try {
     await loadScript('./vendor/shpwrite.js', () => window.shpwrite);
 
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
-    
-    // Determinar zona UTM
+
+    // Determinar zona UTM a partir do datum selecionado
     const datumVal = getVal('f-datum');
     let zonaDetectada = 21;
     if (datumVal.includes('20')) zonaDetectada = 20;
     if (datumVal.includes('22')) zonaDetectada = 22;
-    
-    // Obter coordenadas UTM (já estamos em UTM, então usamos E e N)
-    const coordsUTM = S.vertices.map(v => [parseFloat(v.E.toFixed(4)), parseFloat(v.N.toFixed(4))]);
-    const ringUTM = coordsUTM.concat([ coordsUTM[0] ]); // Fechar o polígono
-    
-    // Criar Feature para ATP (Área Total)
+
+    // Converter coordenadas UTM → Lat/Lon geográficas para o shpwrite
+    // shpwrite espera coordenadas geográficas [lon, lat]
+    const coordsGeo = S.vertices.map(v => {
+      return utmToLatLon(v.E, v.N, zonaDetectada, 'S');
+    });
+    const ringGeo = coordsGeo.concat([coordsGeo[0]]); // fechar polígono
+
+    // Features com coordenadas geográficas (shpwrite usa WGS84/SIRGAS2000)
     const atpFeature = {
       type: "Feature",
-      properties: {
-        ID: 1
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: [ ringUTM ]
-      }
+      properties: { ID: 1 },
+      geometry: { type: "Polygon", coordinates: [ringGeo] }
     };
-    
-    // Criar Feature para AIR (Área Imóvel Rural)
     const airFeature = {
       type: "Feature",
-      properties: {
-        ID: 1,
-        TIPO: "Imóvel Rural",
-        IDENTIFIC: getVal('f-nome') || "Imóvel Rural"
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: [ ringUTM ]
-      }
+      properties: { ID: 1, TIPO: "Imóvel Rural", IDENTIFIC: getVal('f-nome') || "Imóvel Rural" },
+      geometry: { type: "Polygon", coordinates: [ringGeo] }
     };
-    
-    // Gerar ATP shapefile
+
+    // Gerar blobs (sem pasta)
     const atpZipBlob = await window.shpwrite.zip({
       type: "FeatureCollection",
       features: [atpFeature]
-    }, {
-      outputType: 'blob',
-      types: { polygon: 'ATP' }
-    });
-    
-    // Gerar AIR shapefile
+    }, { outputType: 'blob', types: { polygon: 'ATP' } });
+
     const airZipBlob = await window.shpwrite.zip({
       type: "FeatureCollection",
       features: [airFeature]
-    }, {
-      outputType: 'blob',
-      types: { polygon: 'AIR' }
-    });
-    
+    }, { outputType: 'blob', types: { polygon: 'AIR' } });
+
     const JSZip = window.shpwrite.JSZip;
     const finalZip = new JSZip();
-    
-    // Processar ATP
+
+    // ATP files
     const atpZip = await JSZip.loadAsync(atpZipBlob);
     for (const [name, file] of Object.entries(atpZip.files)) {
       if (!file.dir) {
         const content = await file.async('uint8array');
-        finalZip.file(name, content);
+        finalZip.file(`ATP/${name}`, content);
       }
     }
-    finalZip.file('ATP.prj', getSIRGAS2000UtmPRJ(zonaDetectada));
-    
+    finalZip.file('ATP/ATP.prj', getSIRGAS2000GeoPRJ());
+
     // Processar AIR
     const airZip = await JSZip.loadAsync(airZipBlob);
     for (const [name, file] of Object.entries(airZip.files)) {
       if (!file.dir) {
         const content = await file.async('uint8array');
-        finalZip.file(name, content);
+        finalZip.file(`AIR/${name}`, content);
       }
     }
-    finalZip.file('AIR.prj', getSIRGAS2000UtmPRJ(zonaDetectada));
-    
+    finalZip.file('AIR/AIR.prj', getSIRGAS2000GeoPRJ());
+
     const finalBlob = await finalZip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     const url = URL.createObjectURL(finalBlob);
     const a = document.createElement('a');
@@ -2648,6 +2675,11 @@ async function dlShapefile() {
     toast('Erro ao gerar Shapefile: ' + e.message, 'erro');
     console.error(e);
   }
+}
+
+function getSIRGAS2000GeoPRJ() {
+  // PRJ geográfico SIRGAS 2000 — compatível com coordenadas Lat/Lon geradas pelo shpwrite
+  return 'GEOGCS["GCS_SIRGAS_2000",DATUM["D_SIRGAS_2000",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433],AUTHORITY["EPSG","4674"]]';
 }
 
 function getSIRGAS2000UtmPRJ(zona) {
