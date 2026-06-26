@@ -6,7 +6,7 @@
 <title>CAR-MT · Analisador de Memorial Descritivo</title>
 <meta name="description" content="Sistema para processar memoriais descritivos de imóveis rurais e gerar relatórios para o SIMCAR-MT">
 <meta name="keywords" content="CAR, SIMCAR, memorial descritivo, georreferenciamento, Mato Grosso, SEMA-MT">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+<link rel="icon" href="https://raw.githubusercontent.com/sstrural/carplusmt/main/logo-car-digital.png">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1b3a2d">
 <style>
@@ -62,11 +62,10 @@ button { cursor: pointer; font-family: var(--font); }
 }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .logo-mark {
-  width: 34px; height: 34px;
-  background: var(--c-gold);
+  width: 48px; height: 48px;
+  flex-shrink: 0;
   border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; flex-shrink: 0;
+  overflow: hidden;
 }
 .logo-name { color: #fff; font-weight: 700; font-size: .95rem; letter-spacing: .03em; line-height: 1.1; }
 .logo-sub  { color: var(--c-sage); font-size: .65rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; }
@@ -523,7 +522,7 @@ textarea {
 <header class="header">
   <div class="header-inner">
     <div class="logo">
-      <div class="logo-mark">🌿</div>
+      <img src="https://raw.githubusercontent.com/sstrural/carplusmt/main/logo-car-digital.png" alt="Logo CAR DIGITAL 2.0" class="logo-mark" style="width: 48px; height: 48px; object-fit: contain;">
       <div>
         <div class="logo-name">CAR-MT Analisador</div>
         <div class="logo-sub">Memorial Descritivo · SIMCAR · Mato Grosso</div>
