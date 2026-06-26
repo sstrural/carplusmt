@@ -1530,13 +1530,29 @@ Use formato YYYY-MM-DD para datas.`;
     const areaNum = parseFloat((dados.area || '0').replace(',', '.')) || 0;
     const biomaVal = getVal('f-bioma');
     const biomaNome = biomaVal === 'amz' ? 'Amazônia' : 'Cerrado';
-    S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, {
-      ...dados,
+    const shapeDados = {
+      nome_imovel: dados.nome_imovel,
+      area: dados.area,
+      perimetro: dados.perimetro,
+      municipio: dados.municipio,
+      uf: dados.uf,
+      matricula: dados.matricula,
+      ccir: dados.ccir,
+      cns: dados.cns,
+      prop_nome: dados.prop_nome,
+      prop_cpf: dados.prop_cpf,
+      datum: dados.datum,
+      fuso: dados.fuso,
+      meridiano: dados.meridiano,
+      verts_tot: dados.verts_tot,
+      gerado_por: dados.gerado_por,
+      gerado_em: dados.gerado_em,
       atp: areaNum,
       air: areaNum,
       bioma: biomaNome,
       vegetacao_existente: parseFloat((getVal('f-vegetacao-existente') || '0').replace(',', '.')) || 0
-    }, zona);
+    };
+    S.shapeData = buildShapeFeatureCollection(verticesParaUso, coords, shapeDados, zona);
   }
 
   S.nomeImovel = dados.nome_imovel || 'Fazenda';
