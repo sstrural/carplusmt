@@ -609,14 +609,14 @@ textarea {
         <div class="grid-2">
           <div class="col-full">
             <label>Nome do Imóvel</label>
-            <input id="f-nome" placeholder="Ex: Fazenda Novo Sobradinho">
+            <input id="f-nome" placeholder="Nome da propriedade rural">
           </div>
-          <div><label>Município/UF</label><input id="f-municipio" placeholder="Ex: Sapezal/MT"></div>
-          <div><label>Área (ha)</label><input id="f-area" placeholder="Ex: 596,2034"></div>
-          <div><label>Perímetro (m)</label><input id="f-perimetro" placeholder="Ex: 11.240,39"></div>
-          <div><label>Matrícula</label><input id="f-matricula" placeholder="Ex: 688"></div>
-          <div><label>CCIR</label><input id="f-ccir" placeholder="Ex: 9500178392641"></div>
-          <div><label>CNS / Código INCRA</label><input id="f-cns" placeholder="Ex: 06.417-0"></div>
+          <div><label>Município/UF</label><input id="f-municipio" placeholder="Município/UF"></div>
+          <div><label>Área (ha)</label><input id="f-area" placeholder="0,0000"></div>
+          <div><label>Perímetro (m)</label><input id="f-perimetro" placeholder="0,00"></div>
+          <div><label>Matrícula</label><input id="f-matricula" placeholder="Número"></div>
+          <div><label>CCIR</label><input id="f-ccir" placeholder="Código"></div>
+          <div><label>CNS / Código INCRA</label><input id="f-cns" placeholder="Código"></div>
           <div>
             <label>Datum / Fuso UTM</label>
             <select id="f-datum">
@@ -635,12 +635,12 @@ textarea {
           </div>
           <div>
             <label>Área de Vegetação Nativa Existente (ha)</label>
-            <input id="f-vegetacao-existente" type="number" placeholder="Ex: 208,67">
+            <input id="f-vegetacao-existente" type="number" placeholder="0,00">
             <p class="field-hint">Área de vegetação nativa que já existe no imóvel</p>
           </div>
           <div class="col-full">
             <label>Confrontantes</label>
-            <input id="f-confrontantes" placeholder="Ex: Fazenda Fartura, Rio Sapezal, Estrada Municipal SZL-03, Fazenda Cacoré">
+            <input id="f-confrontantes" placeholder="Descreva os confrontantes">
           </div>
         </div>
 
@@ -678,7 +678,7 @@ textarea {
       <div class="card-head">Proprietário / Interessado</div>
       <div class="card-body">
         <div class="grid-2">
-          <div class="col-full"><label>Nome Completo</label><input id="f-prop-nome" placeholder="Ex: Nolsir José Fernandes"></div>
+          <div class="col-full"><label>Nome Completo</label><input id="f-prop-nome" placeholder="Nome Completo"></div>
           <div><label>CPF</label><input id="f-prop-cpf" placeholder="000.000.000-00"></div>
           <div><label>E-mail (opcional)</label><input id="f-prop-email" type="email" placeholder="email@dominio.com.br"></div>
           <div><label>Telefone (opcional)</label><input id="f-prop-tel" placeholder="(66) 9 0000-0000"></div>
@@ -691,12 +691,12 @@ textarea {
       <div class="card-head">Engenheiro Responsável pelo Georreferenciamento</div>
       <div class="card-body">
         <div class="grid-2">
-          <div class="col-full"><label>Nome Completo</label><input id="f-eng-nome" placeholder="Ex: Markus Vinícius Ramos de Matos"></div>
-          <div><label>CREA</label><input id="f-eng-crea" placeholder="Ex: CREA-MT 1220237574"></div>
-          <div><label>Código INCRA</label><input id="f-eng-incra" placeholder="Ex: EFDA"></div>
-          <div><label>ART Nº</label><input id="f-eng-art" placeholder="Ex: 1220260114235"></div>
+          <div class="col-full"><label>Nome Completo</label><input id="f-eng-nome" placeholder="Nome Completo"></div>
+          <div><label>CREA</label><input id="f-eng-crea" placeholder="Registro do CREA"></div>
+          <div><label>Código INCRA</label><input id="f-eng-incra" placeholder="Código"></div>
+          <div><label>ART Nº</label><input id="f-eng-art" placeholder="Número da ART"></div>
           <div><label>Data do Levantamento</label><input id="f-eng-data" type="date"></div>
-          <div><label>Local do Levantamento</label><input id="f-eng-local" placeholder="Ex: Sapezal/MT"></div>
+          <div><label>Local do Levantamento</label><input id="f-eng-local" placeholder="Cidade/UF"></div>
         </div>
       </div>
     </div>
@@ -709,7 +709,7 @@ textarea {
         <div class="grid-2">
           <div class="col-full"><label>Nome Completo</label><input id="f-resp-nome" placeholder="Nome do responsável pelo CAR"></div>
           <div><label>CPF</label><input id="f-resp-cpf" placeholder="000.000.000-00"></div>
-          <div><label>Conselho / Registro</label><input id="f-resp-conselho" placeholder="Ex: CREA-MT / CFT / CFRA"></div>
+          <div><label>Conselho / Registro</label><input id="f-resp-conselho" placeholder="Conselho/Registro"></div>
         </div>
       </div>
     </div>
@@ -821,7 +821,8 @@ textarea {
         type="text" 
         class="config-input" 
         id="branding-nome-input"
-        placeholder="Ex: Escritório de Engenharia Rural Ltda."
+        placeholder="Nome da sua Empresa"
+        onchange="saveConfig()"
       >
       
       <label style="display: block; margin-top: 15px; font-weight: 600;">Logo do Escritório (URL ou Base64)</label>
