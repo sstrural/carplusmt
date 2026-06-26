@@ -7,6 +7,8 @@
 <meta name="description" content="Sistema para processar memoriais descritivos de imóveis rurais e gerar relatórios para o SIMCAR-MT">
 <meta name="keywords" content="CAR, SIMCAR, memorial descritivo, georreferenciamento, Mato Grosso, SEMA-MT">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1b3a2d">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -69,9 +71,28 @@ button { cursor: pointer; font-family: var(--font); }
 .logo-name { color: #fff; font-weight: 700; font-size: .95rem; letter-spacing: .03em; line-height: 1.1; }
 .logo-sub  { color: var(--c-sage); font-size: .65rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; }
 .header-tag {
-  font-family: var(--mono); font-size: .65rem; color: var(--c-gold-lt);
-  border: 1px solid rgba(196,154,60,.4); border-radius: 4px;
-  padding: 3px 9px; letter-spacing: .05em;
+    font-family: var(--mono); font-size: .65rem; color: var(--c-gold-lt);
+    border: 1px solid rgba(196,154,60,.4); border-radius: 4px;
+    padding: 3px 9px; letter-spacing: .05em;
+}
+
+.config-tabs {
+    display: flex; gap: 8px; margin-top: 15px;
+}
+
+.config-tab {
+    flex: 1; padding: 8px 12px; border: none; border-radius: 6px;
+    background: var(--c-mist); color: var(--c-dim); cursor: pointer;
+    font-family: var(--font); font-weight: 600; font-size: 14px;
+    transition: background .2s, color .2s;
+}
+
+.config-tab.active {
+    background: var(--c-forest); color: white;
+}
+
+.config-tab:hover:not(.active) {
+    background: var(--c-sage); color: var(--c-pine);
 }
 
 /* ── LAYOUT ── */
@@ -756,31 +777,66 @@ textarea {
 <div class="config-overlay" id="config-overlay">
   <div class="config-modal">
     <div class="config-title">
-      <span>🔑</span> Configurar API Key
-    </div>
-    <div class="config-subtitle">
-      Para usar o CAR-MT Analisador, você precisa de uma API key gratuita do Groq para processar os memoriais descritivos com IA.
+      <span>⚙️</span> Configurações
     </div>
     
-    <input 
-      type="password" 
-      class="config-input" 
-      id="api-key-input"
-      placeholder="Cole sua API key do Groq aqui (ex: gsk_...)"
-      maxlength="200"
-    >
+    <!-- Tabs -->
+    <div class="config-tabs">
+      <button class="config-tab active" onclick="showConfigTab('api')">API Key</button>
+      <button class="config-tab" onclick="showConfigTab('branding')">Branding</button>
+    </div>
     
-    <div class="config-help">
-      <strong>Como obter sua API key gratuita:</strong><br>
-      1. Acesse <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a><br>
-      2. Crie uma conta gratuita<br>
-      3. Clique em "Create API Key" e copie a chave<br>
-      4. Cole acima e clique em "Salvar"
+    <!-- API Key Tab -->
+    <div id="config-tab-api" class="config-tab-content">
+      <div class="config-subtitle">
+        Para usar o CAR-MT Analisador, você precisa de uma API key gratuita do Groq para processar os memoriais descritivos com IA.
+      </div>
+      <input 
+        type="password" 
+        class="config-input" 
+        id="api-key-input"
+        placeholder="Cole sua API key do Groq aqui (ex: gsk_...)"
+        maxlength="200"
+      >
+      <div class="config-help">
+        <strong>Como obter sua API key gratuita:</strong><br>
+        1. Acesse <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a><br>
+        2. Crie uma conta gratuita<br>
+        3. Clique em "Create API Key" e copie a chave<br>
+        4. Cole acima e clique em "Salvar"
+      </div>
+    </div>
+    
+    <!-- Branding Tab -->
+    <div id="config-tab-branding" class="config-tab-content" style="display: none;">
+      <div class="config-subtitle">
+        Personalize o sistema com a identidade visual do seu escritório!
+      </div>
+      
+      <label style="display: block; margin-top: 15px; font-weight: 600;">Nome do Escritório</label>
+      <input 
+        type="text" 
+        class="config-input" 
+        id="branding-nome-input"
+        placeholder="Ex: Escritório de Engenharia Rural Ltda."
+      >
+      
+      <label style="display: block; margin-top: 15px; font-weight: 600;">Logo do Escritório (URL ou Base64)</label>
+      <input 
+        type="text" 
+        class="config-input" 
+        id="branding-logo-input"
+        placeholder="URL ou Base64 da sua logo"
+      >
+      
+      <div class="config-help" style="margin-top: 10px;">
+        Dica: Use uma imagem quadrada (512x512px) para melhor resultado.
+      </div>
     </div>
     
     <div class="config-actions">
       <button class="btn-config secondary" onclick="skipConfig()">Pular (Modo Offline)</button>
-      <button class="btn-config primary" onclick="saveConfig()">💾 Salvar e Continuar</button>
+      <button class="btn-config primary" onclick="saveConfig()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -858,7 +914,7 @@ const GeradorPDF = {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('CAR-MT Analisador', pageWidth / 2, 25, { align: 'center' });
+    doc.text(BRANDING.nome, pageWidth / 2, 25, { align: 'center' });
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text('Relatório de Memorial Descritivo', pageWidth / 2, 33, { align: 'center' });
@@ -2143,23 +2199,61 @@ function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── CONFIGURAÇÃO DA API KEY ──
+// ── CONFIGURAÇÃO DO BRANDING E API KEY ──
+const BRANDING = {
+  nome: 'CAR-MT Analisador',
+  logo: null,
+  
+  load() {
+    const saved = localStorage.getItem('branding');
+    if (saved) {
+      const data = JSON.parse(saved);
+      this.nome = data.nome || 'CAR-MT Analisador';
+      this.logo = data.logo || null;
+    }
+    this.apply();
+  },
+  
+  save() {
+    localStorage.setItem('branding', JSON.stringify({
+      nome: this.nome,
+      logo: this.logo
+    }));
+  },
+  
+  apply() {
+    const headerTitle = document.querySelector('.logo-name');
+    if (headerTitle) headerTitle.textContent = this.nome;
+    document.title = `${this.nome} · Analisador de Memorial Descritivo`;
+  }
+};
+
+function showConfigTab(tab) {
+  // Desativar todas as abas
+  document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.config-tab-content').forEach(c => c.style.display = 'none');
+  
+  // Ativar a aba selecionada
+  document.querySelector(`.config-tab[onclick="showConfigTab('${tab}')"]`).classList.add('active');
+  document.getElementById(`config-tab-${tab}`).style.display = 'block';
+}
+
 function saveConfig() {
+  // Salvar API Key
   const key = $('api-key-input').value.trim();
-  if (!key) {
-    toast('Por favor, insira uma API key válida.', 'warn');
-    return;
+  if (key && key.startsWith('gsk_')) {
+    GROQ_API_KEY = key;
+    localStorage.setItem('groq_api_key', key);
   }
   
-  if (!key.startsWith('gsk_')) {
-    toast('API key inválida. Deve começar com "gsk_"', 'erro');
-    return;
-  }
+  // Salvar Branding
+  BRANDING.nome = $('branding-nome-input').value.trim() || 'CAR-MT Analisador';
+  BRANDING.logo = $('branding-logo-input').value.trim() || null;
+  BRANDING.save();
+  BRANDING.apply();
   
-  GROQ_API_KEY = key;
-  localStorage.setItem('groq_api_key', key);
   $('config-overlay').style.display = 'none';
-  toast('API key configurada com sucesso!', 'ok');
+  toast('Configurações salvas com sucesso!', 'ok');
 }
 
 function skipConfig() {
@@ -2167,21 +2261,44 @@ function skipConfig() {
   toast('Modo offline ativado. Funcionalidades de IA desabilitadas.', 'warn');
 }
 
-// Verificar se há API key salva
+function reconfigureAPI() {
+  $('config-overlay').style.display = 'flex';
+  $('api-key-input').value = GROQ_API_KEY;
+  $('branding-nome-input').value = BRANDING.nome;
+  $('branding-logo-input').value = BRANDING.logo || '';
+  $('api-key-input').focus();
+}
+
+// ── SERVICE WORKER PARA PWA ──
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registrado com sucesso:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Erro ao registrar ServiceWorker:', error);
+        });
+    });
+  }
+}
+
+// Verificar se há configurações salvas
 window.addEventListener('DOMContentLoaded', () => {
+  // Carregar branding
+  BRANDING.load();
+  
+  // Carregar API Key
   const savedKey = localStorage.getItem('groq_api_key');
   if (savedKey && savedKey.startsWith('gsk_')) {
     GROQ_API_KEY = savedKey;
     $('config-overlay').style.display = 'none';
   }
+  
+  // Registrar Service Worker
+  registerServiceWorker();
 });
-
-// Permitir configurar novamente via console
-function reconfigureAPI() {
-  $('config-overlay').style.display = 'flex';
-  $('api-key-input').value = GROQ_API_KEY;
-  $('api-key-input').focus();
-}
 </script>
 </body>
 </html>
