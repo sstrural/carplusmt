@@ -919,7 +919,24 @@ const GeradorPDF = {
     doc.text(BRANDING.nome, pageWidth / 2, 40, { align: 'center' });
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text('Relatório de Memorial Descritivo Rural - CAR-MT', pageWidth / 2, 60, { align: 'center' });
+    const headerSubtitle = S.validacaoAceita 
+      ? 'Relatório CAR Digital - Memorial Descritivo Rural Validado' 
+      : 'Relatório de Memorial Descritivo Rural - CAR-MT';
+    doc.text(headerSubtitle, pageWidth / 2, 60, { align: 'center' });
+
+    if (S.validacaoAceita) {
+      // Adicionar selo CAR Digital
+      doc.setFillColor(196, 154, 60); // --c-gold
+      doc.rect(pageWidth - 150, 20, 130, 40, 'F');
+      doc.setTextColor(27, 58, 45);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CAR DIGITAL', pageWidth - 85, 42, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text('Validação Automática', pageWidth - 85, 55, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text('✅', pageWidth - 135, 45, { align: 'left' });
+    }
 
     yPos = 100;
 
@@ -1004,16 +1021,20 @@ const GeradorPDF = {
     this.addKeyValuePairs(doc, coordsSimcar, marginLeft, yPos, contentWidth);
     yPos += (coordsSimcar.length * 18) + 20;
 
-    // --- 6. VALIDAÇÃO GEOMÉTRICA ---
+    // --- 6. VALIDAÇÃO GEOMÉTRICA (COMPARATIVO) ---
     if (yPos > pageHeight - 150) { doc.addPage(); yPos = 50; }
-    this.addSectionTitle(doc, '6. Validação Geométrica', marginLeft, yPos);
+    const valTitle = S.validacaoAceita ? '6. Validação Geométrica CAR Digital - Declarado x Calculado' : '6. Validação Geométrica';
+    this.addSectionTitle(doc, valTitle, marginLeft, yPos);
     yPos += 25;
+    
     if (S.validacaoGeometrica) {
       const validacao = S.validacaoGeometrica;
       const dadosValidacao = [
         ['Status', validacao.valido ? '✅ Válido' : '❌ Inválido'],
         ['Número de Vértices', validacao.vertices],
+        ['Perímetro Declarado', (getVal('f-perimetro') || '0') + ' m'],
         ['Perímetro Calculado', validacao.perimetro + ' m'],
+        ['Área Declarada', (getVal('f-area') || '0') + ' ha'],
         ['Área Calculada', validacao.area.areaCalculada + ' ha'],
         ['Diferença de Área', validacao.area.percentual + '%'],
         ['Fechamento Automático', validacao.fechamento.fechadoAutomaticamente ? 'Sim' : 'Não']
@@ -1150,7 +1171,7 @@ const GeradorPDF = {
 };
 
 // ── ESTADO ──
-const S = { kml: '', shapeData: null, nomeImovel: '', vertices: [], validacaoGeometrica: null, passivoAmbiental: null };
+const S = { kml: '', shapeData: null, nomeImovel: '', vertices: [], validacaoGeometrica: null, passivoAmbiental: null, validacaoAceita: false };
 
 // ── UTILIDADES ──
 function $(id) { return document.getElementById(id); }
@@ -2188,6 +2209,56 @@ function renderResult(r) {
       </div>
     </div>
 
+    ${S.validacaoGeometrica ? `
+    <div class="r-section">
+      <div class="r-section-title">🚀 CAR Digital — Validação Automática</div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-body">
+          <p style="margin-bottom:1rem; color:var(--c-dim)">
+            Comparativo entre os dados declarados e os calculados geometricamente. 
+            Aceite para emitir o relatório com a versão "CAR Digital" validada.
+          </p>
+          <div class="validacao-grid">
+            <div class="validacao-item" style="border-left:3px solid var(--c-gold)">
+              <div class="fl">Área Declarada</div>
+              <div class="fv">${(getVal('f-area') || '0')} ha</div>
+            </div>
+            <div class="validacao-item" style="border-left:3px solid var(--c-ok)">
+              <div class="fl">Área Calculada</div>
+              <div class="fv">${S.validacaoGeometrica.area.areaCalculada} ha</div>
+            </div>
+            <div class="validacao-item" style="border-left:3px solid var(--c-gold)">
+              <div class="fl">Perímetro Declarado</div>
+              <div class="fv">${(getVal('f-perimetro') || '0')} m</div>
+            </div>
+            <div class="validacao-item" style="border-left:3px solid var(--c-ok)">
+              <div class="fl">Perímetro Calculado</div>
+              <div class="fv">${S.validacaoGeometrica.perimetro} m</div>
+            </div>
+            <div class="validacao-item" style="border-left:3px solid var(--c-${S.validacaoGeometrica.area.percentual < 5 ? 'ok' : 'warn'})">
+              <div class="fl">Diferença de Área</div>
+              <div class="fv">${S.validacaoGeometrica.area.percentual}%</div>
+            </div>
+          </div>
+          <div id="car-digital-actions" style="display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap">
+            <button 
+              class="btn-dl" 
+              style="background:var(--c-ok); color:white"
+              onclick="aceitarValidacao()"
+            >
+              ✅ Aceitar Validação
+            </button>
+            <button 
+              class="btn-secondary"
+              onclick="recusarValidacao()"
+            >
+              ❌ Recusar / Editar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>` : ''}
+
     <div class="r-section">
       <div class="r-section-title">📁 Arquivos Geoespaciais</div>
       ${kmlHtml}
@@ -2291,6 +2362,29 @@ function renderResult(r) {
 function dlKML() {
   if (!S.kml) { toast('KML não disponível.'); return; }
   downloadFile(S.kml, 'application/vnd.google-earth.kml+xml', '.kml');
+}
+
+// ── CAR DIGITAL — ACEITAR/RECUSAR VALIDAÇÃO ──
+function aceitarValidacao() {
+  S.validacaoAceita = true;
+  // Atualizar a interface
+  const actions = $('car-digital-actions');
+  if (actions) {
+    actions.innerHTML = `
+      <div style="display:flex; align-items:center; gap:.5rem; background:var(--c-ok-bg); border:1px solid var(--c-ok); border-radius:var(--r); padding:.5rem 1rem; flex:1">
+        <span style="font-size:1.5rem">✅</span>
+        <span style="color:var(--c-ok); font-weight:700">Validação Aceita! Relatório CAR Digital ativado.</span>
+      </div>
+      <button class="btn-dl" onclick="GeradorPDF.gerar()">📄 Gerar Relatório CAR Digital</button>
+    `;
+  }
+  toast('Validação CAR Digital aceita!', 'ok');
+}
+
+function recusarValidacao() {
+  S.validacaoAceita = false;
+  goToForm();
+  toast('Edite os dados e revalide.', 'warn');
 }
 
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
