@@ -553,17 +553,17 @@ textarea {
 
     <div class="drop-zone" id="drop-zone">
       <span class="dz-icon">📂</span>
-      <div class="dz-title">Importe o Memorial Descritivo</div>
+      <div class="dz-title">Importe o Memorial Descritivo e a ART</div>
       <div class="dz-sub">
-        Arraste o arquivo aqui ou clique para selecionar.<br>
-        A IA extrai automaticamente todas as coordenadas, dados do imóvel e responsáveis.
+        Arraste os arquivos aqui ou clique para selecionar.<br>
+        A IA extrai automaticamente todas as informações do memorial e da ART.
       </div>
       <div class="format-chips">
         <span class="chip">PDF</span>
         <span class="chip">DOCX</span>
         <span class="chip">TXT</span>
       </div>
-      <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt">
+      <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt" multiple>
     </div>
 
     <div class="divider">ou</div>
@@ -1351,19 +1351,12 @@ dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dra
 dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
 dz.addEventListener('drop', e => {
   e.preventDefault(); dz.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f) processFile(f);
+  if (e.dataTransfer.files.length > 0) processFiles(e.dataTransfer.files);
 });
-fi.addEventListener('change', () => { if (fi.files[0]) processFile(fi.files[0]); });
+fi.addEventListener('change', () => { if (fi.files.length > 0) processFiles(fi.files); });
 
-// ── PROCESSAR ARQUIVO ──
-async function processFile(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (!['pdf','docx','doc','txt'].includes(ext)) {
-    toast('Formato não suportado. Use PDF, DOCX ou TXT.');
-    return;
-  }
-
+// ── PROCESSAR ARQUIVOS ──
+async function processFiles(files) {
   dz.style.display = 'none';
   const proc = $('proc-upload');
   proc.classList.add('visible');
@@ -1384,25 +1377,39 @@ async function processFile(file) {
   try {
     await nextStep(100);
 
-    let texto = '';
+    let textoCombinado = '';
+    const nomesArquivos = [];
 
-    if (ext === 'txt') {
-      texto = await file.text();
-    } else if (ext === 'pdf') {
-      await nextStep(300);
-      texto = await extractPDF(file);
-    } else {
-      await nextStep(300);
-      texto = await extractDOCX(file);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf','docx','doc','txt'].includes(ext)) {
+        toast(`Arquivo ${file.name} não suportado. Pulando...`, 'warn');
+        continue;
+      }
+      nomesArquivos.push(file.name);
+      
+      let textoArquivo = '';
+      if (ext === 'txt') {
+        textoArquivo = await file.text();
+      } else if (ext === 'pdf') {
+        await nextStep(200);
+        textoArquivo = await extractPDF(file);
+      } else {
+        await nextStep(200);
+        textoArquivo = await extractDOCX(file);
+      }
+      
+      textoCombinado += `\n===== INÍCIO DO ARQUIVO: ${file.name} =====\n` + textoArquivo + `\n===== FIM DO ARQUIVO: ${file.name} =====\n`;
     }
 
-    if (!texto || texto.length < 50) throw new Error('Não foi possível extrair texto do arquivo. Verifique se o PDF não é escaneado sem OCR.');
+    if (textoCombinado.length < 50) throw new Error('Não foi possível extrair texto suficiente dos arquivos. Verifique se os PDFs não são escaneados sem OCR.');
 
     await nextStep(400);
-    const dados = await extrairComIA(texto, nextStep);
+    const dados = await extrairComIA(textoCombinado, nextStep);
 
     await nextStep(300);
-    preencherForm(dados, texto, file.name);
+    preencherForm(dados, textoCombinado, nomesArquivos.join(' + '));
 
     proc.classList.remove('visible');
     proc.style.display = 'none';
@@ -1414,7 +1421,7 @@ async function processFile(file) {
     proc.style.display = 'none';
     dz.style.display = '';
     fi.value = '';
-    toast(err.message || 'Erro ao processar o arquivo.');
+    toast(err.message || 'Erro ao processar os arquivos.');
   }
 }
 
