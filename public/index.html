@@ -1170,6 +1170,121 @@ const GeradorPDF = {
       'car_novo': 'CAR Novo'
     };
     return finalidades[value] || 'Não informado';
+  },
+  gerarRelatorioSimcar: function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPos = 50;
+    const marginLeft = 40;
+    const marginRight = 40;
+    const contentWidth = pageWidth - marginLeft - marginRight;
+
+    // Cabeçalho
+    doc.setFillColor(27, 58, 45);
+    doc.rect(0, 0, pageWidth, 80, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(BRANDING.nome, pageWidth / 2, 40, { align: 'center' });
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('RELATÓRIO PASSO A PASSO PARA PREENCHIMENTO NO SIMCAR-MT', pageWidth / 2, 60, { align: 'center' });
+    yPos = 100;
+
+    const camposObrigatorios = [
+      { id: 'f-nome', label: 'Nome do Imóvel Rural', passo: 1 },
+      { id: 'f-municipio', label: 'Município / UF', passo: 1 },
+      { id: 'f-area', label: 'Área Declarada (ha)', passo: 1 },
+      { id: 'f-perimetro', label: 'Perímetro Declarado (m)', passo: 1 },
+      { id: 'f-matricula', label: 'Matrícula / Registro de Imóvel', passo: 2 },
+      { id: 'f-ccir', label: 'CCIR', passo: 2 },
+      { id: 'f-cns', label: 'CNS / INCRA', passo: 2 },
+      { id: 'f-datum', label: 'Datum / Fuso UTM', passo: 3 },
+      { id: 'f-prop-nome', label: 'Nome do Proprietário', passo: 4 },
+      { id: 'f-prop-cpf', label: 'CPF do Proprietário', passo: 4 },
+      { id: 'f-eng-nome', label: 'Nome do Engenheiro Responsável', passo: 5 },
+      { id: 'f-eng-crea', label: 'CREA do Engenheiro', passo: 5 },
+      { id: 'f-eng-art', label: 'ART do Engenheiro', passo: 5 },
+      { id: 'f-inf-lon', label: 'Longitude Inferior Esquerda', passo: 6 },
+      { id: 'f-inf-lat', label: 'Latitude Inferior Esquerda', passo: 6 },
+      { id: 'f-sup-lon', label: 'Longitude Superior Direita', passo: 6 },
+      { id: 'f-sup-lat', label: 'Latitude Superior Direita', passo: 6 },
+      { id: 'f-resp-nome', label: 'Nome do Responsável Técnico pelo CAR', passo: 7 },
+    ];
+
+    const passos = [
+      { num: 1, titulo: 'PASSO 1 - DADOS BÁSICOS DO IMÓVEL RURAL', campos: camposObrigatorios.filter(c => c.passo === 1) },
+      { num: 2, titulo: 'PASSO 2 - DOCUMENTOS DO IMÓVEL', campos: camposObrigatorios.filter(c => c.passo === 2) },
+      { num: 3, titulo: 'PASSO 3 - DADOS DE REFERÊNCIA GEODÉSICA', campos: camposObrigatorios.filter(c => c.passo === 3) },
+      { num: 4, titulo: 'PASSO 4 - DADOS DO PROPRIETÁRIO', campos: camposObrigatorios.filter(c => c.passo === 4) },
+      { num: 5, titulo: 'PASSO 5 - DADOS DO ENGENHEIRO', campos: camposObrigatorios.filter(c => c.passo === 5) },
+      { num: 6, titulo: 'PASSO 6 - COORDENADAS PARA SIMCAR', campos: camposObrigatorios.filter(c => c.passo === 6) },
+      { num: 7, titulo: 'PASSO 7 - DADOS DO RESPONSÁVEL TÉCNICO', campos: camposObrigatorios.filter(c => c.passo === 7) },
+    ];
+
+    passos.forEach(passo => {
+      if (yPos > pageHeight - 100) { doc.addPage(); yPos = 50; }
+      this.addSectionTitle(doc, passo.titulo, marginLeft, yPos);
+      yPos += 25;
+      passo.campos.forEach(campo => {
+        const valor = getVal(campo.id);
+        const falta = !valor || valor === '';
+        if (yPos > pageHeight - 50) { doc.addPage(); yPos = 50; }
+        if (falta) {
+          doc.setFillColor(255, 200, 200);
+          doc.rect(marginLeft, yPos - 12, contentWidth, 20, 'F');
+        }
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(campo.label + ':', marginLeft, yPos);
+        doc.setFont('helvetica', 'normal');
+        if (falta) {
+          doc.setTextColor(150, 0, 0);
+          doc.text('⚠️ FALTA PREENCHER', marginLeft + 200, yPos);
+        } else {
+          doc.text(valor, marginLeft + 200, yPos);
+        }
+        yPos += 22;
+      });
+      yPos += 15;
+    });
+
+    if (S.vertices && S.vertices.length > 0) {
+      if (yPos > pageHeight - 150) { doc.addPage(); yPos = 50; }
+      this.addSectionTitle(doc, 'PASSO 8 - VÉRTICES DO POLÍGONO (PARA LANÇAMENTO NO SIMCAR', marginLeft, yPos);
+      yPos += 25;
+      const datumValue = getVal('f-datum');
+      let zona = 21;
+      if (datumValue.includes('20')) zona = 20;
+      if (datumValue.includes('22')) zona = 22;
+
+      S.vertices.forEach((v, i) => {
+        if (yPos > pageHeight - 50) { doc.addPage(); yPos = 50; }
+        const latLng = utmToLatLon(v.E, v.N, zona);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Vértice ${i + 1} (${v.nome || ''})`, marginLeft, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`UTM E: ${v.E.toFixed(2)}  UTM N: ${v.N.toFixed(2)}  Lat: ${latLng.lat.toFixed(8)}  Lon: ${latLng.lon.toFixed(8)}`, marginLeft, yPos + 12);
+        yPos += 30;
+      });
+    }
+
+    const dataAtual = new Date().toLocaleString('pt-BR');
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Relatório passo a passo gerado em: ${dataAtual} | Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 20, { align: 'center' });
+    }
+
+    const nomeArquivo = (getVal('f-nome') || 'relatorio-simcar').replace(/\s+/g, '_').toLowerCase() + '.pdf';
+    doc.save(nomeArquivo);
+    toast('Relatório passo a passo para o SIMCAR baixado com sucesso!', 'ok');
   }
 };
 
@@ -2346,7 +2461,7 @@ function renderResult(r) {
         <button class="btn-dl" onclick="GeradorPDF.gerar()">📄 Relatório PDF</button>
       </div>
       <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem;">
-        <button class="btn-print-r" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn-print-r" onclick="GeradorPDF.gerarRelatorioSimcar()">🖨️ Relatório SIMCAR Passo a Passo</button>
         <button class="btn-secondary" onclick="goToForm()">← Editar</button>
         <button class="btn-restart" onclick="restart()">🔄 Nova Análise</button>
       </div>
