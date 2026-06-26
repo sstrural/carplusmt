@@ -2548,7 +2548,7 @@ function recusarValidacao() {
 
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
 async function dlShapefile() {
-  if (!S.shapeData || !S.vertices || S.vertices.length < 3) {
+  if (!S.vertices || S.vertices.length < 3) {
     toast('Vértices não disponíveis para gerar Shapefile.', 'warn');
     return;
   }
@@ -2558,30 +2558,96 @@ async function dlShapefile() {
 
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
     
-    // Simplificar: enviar apenas o polígono (remover os pontos para teste)
-    const geoJSONSimplificado = {
-      type: "FeatureCollection",
-      features: [S.shapeData.features[0]]
+    // Determinar zona UTM
+    const datumVal = getVal('f-datum');
+    let zonaDetectada = 21;
+    if (datumVal.includes('20')) zonaDetectada = 20;
+    if (datumVal.includes('22')) zonaDetectada = 22;
+    
+    // Obter coordenadas
+    const coords = S.vertices.map(v => utmToLatLon(v.E, v.N, zonaDetectada));
+    
+    // Criar Feature para ATP (Área Total)
+    const atpFeature = {
+      type: "Feature",
+      properties: {
+        ID: 1
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          coords.map(c => [parseFloat(c.lon.toFixed(8)), parseFloat(c.lat.toFixed(8))])
+            .concat([[parseFloat(coords[0].lon.toFixed(8)), parseFloat(coords[0].lat.toFixed(8))]])
+        ]
+      }
     };
-
-    const shapefileZip = await window.shpwrite.zip(geoJSONSimplificado, {
+    
+    // Criar Feature para AIR (Área Imóvel Rural)
+    const airFeature = {
+      type: "Feature",
+      properties: {
+        ID: 1,
+        TIPO: "Imóvel Rural",
+        IDENTIFIC: getVal('f-nome') || "Imóvel Rural"
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          coords.map(c => [parseFloat(c.lon.toFixed(8)), parseFloat(c.lat.toFixed(8))])
+            .concat([[parseFloat(coords[0].lon.toFixed(8)), parseFloat(coords[0].lat.toFixed(8))]])
+        ]
+      }
+    };
+    
+    // Gerar ATP shapefile
+    const atpZipBlob = await window.shpwrite.zip({
+      type: "FeatureCollection",
+      features: [atpFeature]
+    }, {
       outputType: 'blob',
-      types: { polygon: nomeArquivo }
+      types: { polygon: 'ATP' }
     });
-
-    // Vamos substituir o PRJ padrão pelo nosso SIRGAS 2000 Geographic
+    
+    // Gerar AIR shapefile
+    const airZipBlob = await window.shpwrite.zip({
+      type: "FeatureCollection",
+      features: [airFeature]
+    }, {
+      outputType: 'blob',
+      types: { polygon: 'AIR' }
+    });
+    
     const JSZip = window.shpwrite.JSZip;
-    const zip = await JSZip.loadAsync(shapefileZip);
-    zip.file(`${nomeArquivo}.prj`, getSIRGAS2000GeographicPRJ());
-    const finalBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-
+    const finalZip = new JSZip();
+    
+    // Processar ATP
+    const atpZip = await JSZip.loadAsync(atpZipBlob);
+    for (const [name, file] of Object.entries(atpZip.files)) {
+      if (!file.dir) {
+        const content = await file.async('uint8array');
+        finalZip.file(name, content);
+      }
+    }
+    finalZip.file('ATP.prj', getSIRGAS2000GeographicPRJ());
+    
+    // Processar AIR
+    const airZip = await JSZip.loadAsync(airZipBlob);
+    for (const [name, file] of Object.entries(airZip.files)) {
+      if (!file.dir) {
+        const content = await file.async('uint8array');
+        finalZip.file(name, content);
+      }
+    }
+    finalZip.file('AIR.prj', getSIRGAS2000GeographicPRJ());
+    
+    const finalBlob = await finalZip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     const url = URL.createObjectURL(finalBlob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${nomeArquivo}_shapefile.zip`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('Shapefile (.zip) exportado com sucesso!', 'ok');
+    toast('Shapefile (.zip) com ATP e AIR exportado com sucesso!', 'ok');
   } catch(e) {
     toast('Erro ao gerar Shapefile: ' + e.message, 'erro');
     console.error(e);
