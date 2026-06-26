@@ -1935,6 +1935,9 @@ function buildShapeFeatureCollection(vertices, coords, dados, zona) {
       {
         type: "Feature",
         properties: {
+          ID: 1,
+          TIPO: 'Imóvel Rural',
+          IDENTIFIC: dados.nome_imovel || 'Imóvel Rural',
           nome: dados.nome_imovel || 'Imóvel Rural',
           area_ha: areaNum,
           perim_m: parseFloat((dados.perimetro || '0').replace(',', '.')) || 0,
@@ -1951,9 +1954,9 @@ function buildShapeFeatureCollection(vertices, coords, dados, zona) {
           verts_tot: vertices.length,
           gerado_por: 'CAR-MT Analisador',
           gerado_em: new Date().toISOString(),
-          atp: dados.atp || areaNum,
-          air: dados.air || areaNum,
-          bioma: dados.bioma || 'Cerrado',
+          ATP: dados.atp || areaNum,
+          AIR: dados.air || areaNum,
+          BIOMA: dados.bioma || 'Cerrado',
           vegetacao_existente: dados.vegetacao_existente || 0
         },
         geometry: {
