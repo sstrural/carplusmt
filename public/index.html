@@ -1729,20 +1729,24 @@ class ValidadorGeometrico {
 const geometrico = new ValidadorGeometrico();
 async function extrairComIA(texto, nextStep) {
   const prompt = `Você é especialista em georreferenciamento rural e CAR no Brasil.
-Analise este memorial descritivo e extraia TODOS os dados com atenção especial aos vértices.
+Analise estes documentos (memorial descritivo e/ou ART) e extraia TODOS os dados possíveis com atenção máxima.
 
-MEMORIAL:
-${texto.substring(0, 7000)}
+DOCUMENTOS:
+${texto.substring(0, 15000)}
 
-INSTRUÇÕES IMPORTANTES:
+INSTRUÇÕES IMPORTANTISSIMAS:
 1. Extraia TODOS os vértices em ordem, incluindo o vértice final que fecha o polígono (mesmo que seja o mesmo que o inicial)
 2. Para cada vértice, extraia o nome, coordenada E (Este) e coordenada N (Norte) em UTM
 3. Retorne APENAS um objeto JSON válido, sem texto antes ou depois, sem markdown
-4. Use "" para campos ausentes
+4. Use "" para campos que não encontrar
 5. Não adicione vírgulas após o último item de cada array ou objeto
+6. Preencha TODOS os campos que encontrar nos documentos, não deixe nada de fora
+7. Para bioma: use "cerrado" ou "amz"
+8. Para tipo_dominio: use "rural_privado", "assentamento", "quilombola" ou "indigena"
+9. Para finalidade_car: use "usucapiao", "registro", "regularizacao" ou "car_novo"
 
 Formato esperado:
-{"nome_imovel":"","municipio":"","uf":"MT","area":"","perimetro":"","matricula":"","ccir":"","cns":"","datum":"","meridiano_central":"","fuso":"","finalidade_car":"","prop_nome":"","prop_cpf":"","eng_nome":"","eng_crea":"","eng_incra":"","eng_art":"","data_levantamento":"","local_levantamento":"","confrontantes":"","ponto_inicial":"","ponto_final":"","total_vertices":0,"vertices":[{"nome":"EFDA-M-0207","E":299850.79,"N":8543511.77}],"observacoes":""}
+{"nome_imovel":"","municipio":"","uf":"MT","area":"","perimetro":"","matricula":"","ccir":"","cns":"","datum":"","meridiano_central":"","fuso":"","finalidade_car":"","prop_nome":"","prop_cpf":"","prop_email":"","prop_tel":"","eng_nome":"","eng_crea":"","eng_incra":"","eng_art":"","data_levantamento":"","local_levantamento":"","confrontantes":"","ponto_inicial":"","ponto_final":"","total_vertices":0,"vertices":[{"nome":"EFDA-M-0207","E":299850.79,"N":8543511.77}],"observacoes":"","bioma":"","vegetacao_existente":"","modulo_fiscal":"75","tipo_dominio":"","resp_nome":"","resp_cpf":"","resp_conselho":""}
 
 Use formato YYYY-MM-DD para datas.`;
 
@@ -1998,12 +2002,19 @@ function preencherForm(d, texto, fileName) {
   setVal('f-confrontantes', d.confrontantes);
   setVal('f-prop-nome', d.prop_nome);
   setVal('f-prop-cpf', d.prop_cpf);
+  setVal('f-prop-email', d.prop_email);
+  setVal('f-prop-tel', d.prop_tel);
   setVal('f-eng-nome', d.eng_nome);
   setVal('f-eng-crea', d.eng_crea);
   setVal('f-eng-incra', d.eng_incra);
   setVal('f-eng-art', d.eng_art);
   setVal('f-eng-data', d.data_levantamento);
   setVal('f-eng-local', d.local_levantamento || d.municipio);
+  setVal('f-resp-nome', d.resp_nome);
+  setVal('f-resp-cpf', d.resp_cpf);
+  setVal('f-resp-conselho', d.resp_conselho);
+  setVal('f-vegetacao-existente', d.vegetacao_existente);
+  setVal('f-modulo', d.modulo_fiscal);
 
   // Datum - Auto-detectar fuso baseado no memorial
   const datumSel = $('f-datum');
@@ -2016,11 +2027,31 @@ function preencherForm(d, texto, fileName) {
     datumSel.value = 'SIRGAS2000_21S'; // Default para centro de MT (MC 57°W)
   }
 
+  // Bioma
+  if (d.bioma) {
+    const biomaSel = $('f-bioma');
+    if (d.bioma.toLowerCase().includes('amz') || d.bioma.toLowerCase().includes('amazônia')) {
+      biomaSel.value = 'amz';
+    } else {
+      biomaSel.value = 'cerrado';
+    }
+  }
+
+  // Tipo de domínio
+  if (d.tipo_dominio) {
+    const tipoSel = $('f-tipo');
+    if (d.tipo_dominio === 'assentamento') tipoSel.value = 'assentamento';
+    else if (d.tipo_dominio === 'quilombola') tipoSel.value = 'quilombola';
+    else if (d.tipo_dominio === 'indigena') tipoSel.value = 'indigena';
+    else tipoSel.value = 'rural_privado';
+  }
+
   // Finalidade
   const fin = (d.finalidade_car || '').toLowerCase();
   if (fin.includes('usucap')) $('f-finalidade').value = 'usucapiao';
   else if (fin.includes('reg')) $('f-finalidade').value = 'regularizacao';
   else if (fin.includes('matr') || fin.includes('reg')) $('f-finalidade').value = 'registro';
+  else if (fin.includes('car') || fin.includes('novo')) $('f-finalidade').value = 'car_novo';
 
   // Coords SIMCAR
   if (d.simcar) {
