@@ -2180,19 +2180,21 @@ async function dlShapefile() {
     // Simplificar: enviar apenas o polígono (remover os pontos para teste)
     const geoJSONSimplificado = {
       type: "FeatureCollection",
-      crs: {
-        type: "name",
-        properties: { name: "urn:ogc:def:crs:EPSG::4674" }
-      },
       features: [S.shapeData.features[0]]
     };
 
-    const shapefileZip = window.shpwrite.zip(geoJSONSimplificado, {
-      prj: getSIRGAS2000GeographicPRJ()
+    const shapefileZip = await window.shpwrite.zip(geoJSONSimplificado, {
+      outputType: 'blob',
+      types: { polygon: nomeArquivo }
     });
 
-    const blob = shapefileZip instanceof Blob ? shapefileZip : new Blob([shapefileZip], { type: 'application/zip' });
-    const url = URL.createObjectURL(blob);
+    // Vamos substituir o PRJ padrão pelo nosso SIRGAS 2000 Geographic
+    const JSZip = window.shpwrite.JSZip;
+    const zip = await JSZip.loadAsync(shapefileZip);
+    zip.file(`${nomeArquivo}.prj`, getSIRGAS2000GeographicPRJ());
+    const finalBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+
+    const url = URL.createObjectURL(finalBlob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${nomeArquivo}_shapefile.zip`;

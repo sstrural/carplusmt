@@ -4215,6 +4215,7 @@ module.exports = function (
 module.exports.download = require("../src/download");
 module.exports.write = require("../src/write");
 module.exports.zip = require("../src/zip");
+module.exports.JSZip = require("jszip");
 
-},{"../src/download":19,"../src/write":27,"../src/zip":28}]},{},[29])(29)
+},{"../src/download":19,"../src/write":27,"../src/zip":28,"jszip":15}]},{},[29])(29)
 });
