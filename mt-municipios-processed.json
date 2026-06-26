@@ -1,0 +1,1422 @@
+{
+  "ACORIZAL": {
+    "name": "Acorizal",
+    "ibge_id": 5100102,
+    "latitude": -15.194,
+    "longitude": -56.3632,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "AGUA BOA": {
+    "name": "Água Boa",
+    "ibge_id": 5100201,
+    "latitude": -14.051,
+    "longitude": -52.1601,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "ALTA FLORESTA": {
+    "name": "Alta Floresta",
+    "ibge_id": 5100250,
+    "latitude": -9.86674,
+    "longitude": -56.0867,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ALTO ARAGUAIA": {
+    "name": "Alto Araguaia",
+    "ibge_id": 5100300,
+    "latitude": -17.3153,
+    "longitude": -53.2181,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "ALTO BOA VISTA": {
+    "name": "Alto Boa Vista",
+    "ibge_id": 5100359,
+    "latitude": -11.6732,
+    "longitude": -51.3883,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "ALTO GARCAS": {
+    "name": "Alto Garças",
+    "ibge_id": 5100409,
+    "latitude": -16.9462,
+    "longitude": -53.5272,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "ALTO PARAGUAI": {
+    "name": "Alto Paraguai",
+    "ibge_id": 5100508,
+    "latitude": -14.5137,
+    "longitude": -56.4776,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "ALTO TAQUARI": {
+    "name": "Alto Taquari",
+    "ibge_id": 5100607,
+    "latitude": -17.8241,
+    "longitude": -53.2792,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "APIACAS": {
+    "name": "Apiacás",
+    "ibge_id": 5100805,
+    "latitude": -9.53981,
+    "longitude": -57.4587,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ARAGUAIANA": {
+    "name": "Araguaiana",
+    "ibge_id": 5101001,
+    "latitude": -15.7291,
+    "longitude": -51.8341,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "ARAGUAINHA": {
+    "name": "Araguainha",
+    "ibge_id": 5101209,
+    "latitude": -16.857,
+    "longitude": -53.0318,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "ARAPUTANGA": {
+    "name": "Araputanga",
+    "ibge_id": 5101258,
+    "latitude": -15.4641,
+    "longitude": -58.3425,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "ARENAPOLIS": {
+    "name": "Arenápolis",
+    "ibge_id": 5101308,
+    "latitude": -14.4472,
+    "longitude": -56.8437,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ARIPUANA": {
+    "name": "Aripuanã",
+    "ibge_id": 5101407,
+    "latitude": -10.1723,
+    "longitude": -59.4568,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "BARAO DE MELGACO": {
+    "name": "Barão de Melgaço",
+    "ibge_id": 5101605,
+    "latitude": -16.2067,
+    "longitude": -55.9623,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "BARRA DO BUGRES": {
+    "name": "Barra do Bugres",
+    "ibge_id": 5101704,
+    "latitude": -15.0702,
+    "longitude": -57.1878,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "BARRA DO GARCAS": {
+    "name": "Barra do Garças",
+    "ibge_id": 5101803,
+    "latitude": -15.8804,
+    "longitude": -52.264,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "BOA ESPERANCA DO NORTE": {
+    "name": "Boa Esperança do Norte",
+    "ibge_id": 5101837,
+    "latitude": -13.5067,
+    "longitude": -55.1486,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "BOM JESUS DO ARAGUAIA": {
+    "name": "Bom Jesus do Araguaia",
+    "ibge_id": 5101852,
+    "latitude": -12.1706,
+    "longitude": -51.5032,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "BRASNORTE": {
+    "name": "Brasnorte",
+    "ibge_id": 5101902,
+    "latitude": -12.1474,
+    "longitude": -57.9833,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CACERES": {
+    "name": "Cáceres",
+    "ibge_id": 5102504,
+    "latitude": -16.0764,
+    "longitude": -57.6818,
+    "primary_bioma": "cerrado",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "west"
+  },
+  "CAMPINAPOLIS": {
+    "name": "Campinápolis",
+    "ibge_id": 5102603,
+    "latitude": -14.5162,
+    "longitude": -52.893,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "CAMPO NOVO DO PARECIS": {
+    "name": "Campo Novo do Parecis",
+    "ibge_id": 5102637,
+    "latitude": -13.6587,
+    "longitude": -57.8907,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CAMPO VERDE": {
+    "name": "Campo Verde",
+    "ibge_id": 5102678,
+    "latitude": -15.545,
+    "longitude": -55.1626,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "CAMPOS DE JULIO": {
+    "name": "Campos de Júlio",
+    "ibge_id": 5102686,
+    "latitude": -13.7242,
+    "longitude": -59.2858,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CANABRAVA DO NORTE": {
+    "name": "Canabrava do Norte",
+    "ibge_id": 5102694,
+    "latitude": -11.0556,
+    "longitude": -51.8209,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "CANARANA": {
+    "name": "Canarana",
+    "ibge_id": 5102702,
+    "latitude": -13.5515,
+    "longitude": -52.2705,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "CARLINDA": {
+    "name": "Carlinda",
+    "ibge_id": 5102793,
+    "latitude": -9.94912,
+    "longitude": -55.8417,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "CASTANHEIRA": {
+    "name": "Castanheira",
+    "ibge_id": 5102850,
+    "latitude": -11.1251,
+    "longitude": -58.6081,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CHAPADA DOS GUIMARAES": {
+    "name": "Chapada dos Guimarães",
+    "ibge_id": 5103007,
+    "latitude": -15.4643,
+    "longitude": -55.7499,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "CLAUDIA": {
+    "name": "Cláudia",
+    "ibge_id": 5103056,
+    "latitude": -11.5075,
+    "longitude": -54.8835,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "COCALINHO": {
+    "name": "Cocalinho",
+    "ibge_id": 5103106,
+    "latitude": -14.3903,
+    "longitude": -51.0001,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "COLIDER": {
+    "name": "Colíder",
+    "ibge_id": 5103205,
+    "latitude": -10.8135,
+    "longitude": -55.461,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "COLNIZA": {
+    "name": "Colniza",
+    "ibge_id": 5103254,
+    "latitude": -9.46121,
+    "longitude": -59.2252,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "COMODORO": {
+    "name": "Comodoro",
+    "ibge_id": 5103304,
+    "latitude": -13.6614,
+    "longitude": -59.7848,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CONFRESA": {
+    "name": "Confresa",
+    "ibge_id": 5103353,
+    "latitude": -10.6437,
+    "longitude": -51.5699,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "CONQUISTA D'OESTE": {
+    "name": "Conquista D'Oeste",
+    "ibge_id": 5103361,
+    "latitude": -14.5381,
+    "longitude": -59.5444,
+    "primary_bioma": "cerrado",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "west"
+  },
+  "COTRIGUACU": {
+    "name": "Cotriguaçu",
+    "ibge_id": 5103379,
+    "latitude": -9.85656,
+    "longitude": -58.4192,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "CUIABA": {
+    "name": "Cuiabá",
+    "ibge_id": 5103403,
+    "latitude": -15.601,
+    "longitude": -56.0974,
+    "primary_bioma": "cerrado",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "central"
+  },
+  "CURVELANDIA": {
+    "name": "Curvelândia",
+    "ibge_id": 5103437,
+    "latitude": -15.6084,
+    "longitude": -57.9133,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "DENISE": {
+    "name": "Denise",
+    "ibge_id": 5103452,
+    "latitude": -14.7324,
+    "longitude": -57.0583,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "DIAMANTINO": {
+    "name": "Diamantino",
+    "ibge_id": 5103502,
+    "latitude": -14.4037,
+    "longitude": -56.4366,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "north"
+  },
+  "DOM AQUINO": {
+    "name": "Dom Aquino",
+    "ibge_id": 5103601,
+    "latitude": -15.8099,
+    "longitude": -54.9223,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "FELIZ NATAL": {
+    "name": "Feliz Natal",
+    "ibge_id": 5103700,
+    "latitude": -12.385,
+    "longitude": -54.9227,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "FIGUEIROPOLIS D'OESTE": {
+    "name": "Figueirópolis D'Oeste",
+    "ibge_id": 5103809,
+    "latitude": -15.4439,
+    "longitude": -58.7391,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "GAUCHA DO NORTE": {
+    "name": "Gaúcha do Norte",
+    "ibge_id": 5103858,
+    "latitude": -13.2443,
+    "longitude": -53.0809,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "GENERAL CARNEIRO": {
+    "name": "General Carneiro",
+    "ibge_id": 5103908,
+    "latitude": -15.7094,
+    "longitude": -52.7574,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "GLORIA D'OESTE": {
+    "name": "Glória D'Oeste",
+    "ibge_id": 5103957,
+    "latitude": -15.768,
+    "longitude": -58.3108,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "GUARANTA DO NORTE": {
+    "name": "Guarantã do Norte",
+    "ibge_id": 5104104,
+    "latitude": -9.96218,
+    "longitude": -54.9121,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "GUIRATINGA": {
+    "name": "Guiratinga",
+    "ibge_id": 5104203,
+    "latitude": -16.346,
+    "longitude": -53.7575,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "INDIAVAI": {
+    "name": "Indiavaí",
+    "ibge_id": 5104500,
+    "latitude": -15.4921,
+    "longitude": -58.5802,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "IPIRANGA DO NORTE": {
+    "name": "Ipiranga do Norte",
+    "ibge_id": 5104526,
+    "latitude": -12.2408,
+    "longitude": -56.1531,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ITANHANGA": {
+    "name": "Itanhangá",
+    "ibge_id": 5104542,
+    "latitude": -12.2259,
+    "longitude": -56.6463,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ITAUBA": {
+    "name": "Itaúba",
+    "ibge_id": 5104559,
+    "latitude": -11.0614,
+    "longitude": -55.2766,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "ITIQUIRA": {
+    "name": "Itiquira",
+    "ibge_id": 5104609,
+    "latitude": -17.2147,
+    "longitude": -54.1422,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "JACIARA": {
+    "name": "Jaciara",
+    "ibge_id": 5104807,
+    "latitude": -15.9548,
+    "longitude": -54.9733,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "JANGADA": {
+    "name": "Jangada",
+    "ibge_id": 5104906,
+    "latitude": -15.235,
+    "longitude": -56.4917,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "JAURU": {
+    "name": "Jauru",
+    "ibge_id": 5105002,
+    "latitude": -15.3342,
+    "longitude": -58.8723,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "JUARA": {
+    "name": "Juara",
+    "ibge_id": 5105101,
+    "latitude": -11.2639,
+    "longitude": -57.5244,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "JUINA": {
+    "name": "Juína",
+    "ibge_id": 5105150,
+    "latitude": -11.3728,
+    "longitude": -58.7483,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "JURUENA": {
+    "name": "Juruena",
+    "ibge_id": 5105176,
+    "latitude": -10.3178,
+    "longitude": -58.3592,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "JUSCIMEIRA": {
+    "name": "Juscimeira",
+    "ibge_id": 5105200,
+    "latitude": -16.0633,
+    "longitude": -54.8859,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "LAMBARI D'OESTE": {
+    "name": "Lambari D'Oeste",
+    "ibge_id": 5105234,
+    "latitude": -15.3188,
+    "longitude": -58.0046,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "LUCAS DO RIO VERDE": {
+    "name": "Lucas do Rio Verde",
+    "ibge_id": 5105259,
+    "latitude": -13.0588,
+    "longitude": -55.9042,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "LUCIARA": {
+    "name": "Luciara",
+    "ibge_id": 5105309,
+    "latitude": -11.2219,
+    "longitude": -50.6676,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "MARCELANDIA": {
+    "name": "Marcelândia",
+    "ibge_id": 5105580,
+    "latitude": -11.0463,
+    "longitude": -54.4377,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "MATUPA": {
+    "name": "Matupá",
+    "ibge_id": 5105606,
+    "latitude": -10.1821,
+    "longitude": -54.9467,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "MIRASSOL D'OESTE": {
+    "name": "Mirassol d'Oeste",
+    "ibge_id": 5105622,
+    "latitude": -15.6759,
+    "longitude": -58.0951,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "NOBRES": {
+    "name": "Nobres",
+    "ibge_id": 5105903,
+    "latitude": -14.7192,
+    "longitude": -56.3284,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "NORTELANDIA": {
+    "name": "Nortelândia",
+    "ibge_id": 5106000,
+    "latitude": -14.454,
+    "longitude": -56.7945,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOSSA SENHORA DO LIVRAMENTO": {
+    "name": "Nossa Senhora do Livramento",
+    "ibge_id": 5106109,
+    "latitude": -15.772,
+    "longitude": -56.3432,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "NOVA BANDEIRANTES": {
+    "name": "Nova Bandeirantes",
+    "ibge_id": 5106158,
+    "latitude": -9.84977,
+    "longitude": -57.8139,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "NOVA BRASILANDIA": {
+    "name": "Nova Brasilândia",
+    "ibge_id": 5106208,
+    "latitude": -14.9612,
+    "longitude": -54.9685,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "NOVA CANAA DO NORTE": {
+    "name": "Nova Canaã do Norte",
+    "ibge_id": 5106216,
+    "latitude": -10.558,
+    "longitude": -55.953,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA GUARITA": {
+    "name": "Nova Guarita",
+    "ibge_id": 5108808,
+    "latitude": -10.312,
+    "longitude": -55.4061,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA LACERDA": {
+    "name": "Nova Lacerda",
+    "ibge_id": 5106182,
+    "latitude": -14.4727,
+    "longitude": -59.6001,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "NOVA MARILANDIA": {
+    "name": "Nova Marilândia",
+    "ibge_id": 5108857,
+    "latitude": -14.3568,
+    "longitude": -56.9696,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA MARINGA": {
+    "name": "Nova Maringá",
+    "ibge_id": 5108907,
+    "latitude": -13.0136,
+    "longitude": -57.0908,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA MONTE VERDE": {
+    "name": "Nova Monte Verde",
+    "ibge_id": 5108956,
+    "latitude": -9.99998,
+    "longitude": -57.5261,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "NOVA MUTUM": {
+    "name": "Nova Mutum",
+    "ibge_id": 5106224,
+    "latitude": -13.8374,
+    "longitude": -56.0743,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "north"
+  },
+  "NOVA NAZARE": {
+    "name": "Nova Nazaré",
+    "ibge_id": 5106174,
+    "latitude": -13.9486,
+    "longitude": -51.8002,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "NOVA OLIMPIA": {
+    "name": "Nova Olímpia",
+    "ibge_id": 5106232,
+    "latitude": -14.7889,
+    "longitude": -57.2886,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "NOVA SANTA HELENA": {
+    "name": "Nova Santa Helena",
+    "ibge_id": 5106190,
+    "latitude": -10.8651,
+    "longitude": -55.1872,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA UBIRATA": {
+    "name": "Nova Ubiratã",
+    "ibge_id": 5106240,
+    "latitude": -12.9834,
+    "longitude": -55.2556,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVA XAVANTINA": {
+    "name": "Nova Xavantina",
+    "ibge_id": 5106257,
+    "latitude": -14.6771,
+    "longitude": -52.3502,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "NOVO HORIZONTE DO NORTE": {
+    "name": "Novo Horizonte do Norte",
+    "ibge_id": 5106273,
+    "latitude": -11.4089,
+    "longitude": -57.3488,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVO MUNDO": {
+    "name": "Novo Mundo",
+    "ibge_id": 5106265,
+    "latitude": -9.95616,
+    "longitude": -55.2029,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "NOVO SANTO ANTONIO": {
+    "name": "Novo Santo Antônio",
+    "ibge_id": 5106315,
+    "latitude": -12.2875,
+    "longitude": -50.9686,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "NOVO SAO JOAQUIM": {
+    "name": "Novo São Joaquim",
+    "ibge_id": 5106281,
+    "latitude": -14.9054,
+    "longitude": -53.0194,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "PARANAITA": {
+    "name": "Paranaíta",
+    "ibge_id": 5106299,
+    "latitude": -9.65835,
+    "longitude": -56.4786,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "PARANATINGA": {
+    "name": "Paranatinga",
+    "ibge_id": 5106307,
+    "latitude": -14.4265,
+    "longitude": -54.0524,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "PEDRA PRETA": {
+    "name": "Pedra Preta",
+    "ibge_id": 5106372,
+    "latitude": -16.6245,
+    "longitude": -54.4722,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "PEIXOTO DE AZEVEDO": {
+    "name": "Peixoto de Azevedo",
+    "ibge_id": 5106422,
+    "latitude": -10.2262,
+    "longitude": -54.9794,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "PLANALTO DA SERRA": {
+    "name": "Planalto da Serra",
+    "ibge_id": 5106455,
+    "latitude": -14.6518,
+    "longitude": -54.7819,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "POCONE": {
+    "name": "Poconé",
+    "ibge_id": 5106505,
+    "latitude": -16.266,
+    "longitude": -56.6261,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "PONTAL DO ARAGUAIA": {
+    "name": "Pontal do Araguaia",
+    "ibge_id": 5106653,
+    "latitude": -15.9274,
+    "longitude": -52.3273,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "PONTE BRANCA": {
+    "name": "Ponte Branca",
+    "ibge_id": 5106703,
+    "latitude": -16.7584,
+    "longitude": -52.8369,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "PONTES E LACERDA": {
+    "name": "Pontes e Lacerda",
+    "ibge_id": 5106752,
+    "latitude": -15.2219,
+    "longitude": -59.3435,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "PORTO ALEGRE DO NORTE": {
+    "name": "Porto Alegre do Norte",
+    "ibge_id": 5106778,
+    "latitude": -10.8761,
+    "longitude": -51.6357,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "PORTO DOS GAUCHOS": {
+    "name": "Porto dos Gaúchos",
+    "ibge_id": 5106802,
+    "latitude": -11.533,
+    "longitude": -57.4132,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "PORTO ESPERIDIAO": {
+    "name": "Porto Esperidião",
+    "ibge_id": 5106828,
+    "latitude": -15.857,
+    "longitude": -58.4619,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "PORTO ESTRELA": {
+    "name": "Porto Estrela",
+    "ibge_id": 5106851,
+    "latitude": -15.3235,
+    "longitude": -57.2204,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "POXOREU": {
+    "name": "Poxoréu",
+    "ibge_id": 5107008,
+    "latitude": -15.8299,
+    "longitude": -54.4208,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "PRIMAVERA DO LESTE": {
+    "name": "Primavera do Leste",
+    "ibge_id": 5107040,
+    "latitude": -15.544,
+    "longitude": -54.2811,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "QUERENCIA": {
+    "name": "Querência",
+    "ibge_id": 5107065,
+    "latitude": -12.6093,
+    "longitude": -52.1821,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "RESERVA DO CABACAL": {
+    "name": "Reserva do Cabaçal",
+    "ibge_id": 5107156,
+    "latitude": -15.0743,
+    "longitude": -58.4585,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "RIBEIRAO CASCALHEIRA": {
+    "name": "Ribeirão Cascalheira",
+    "ibge_id": 5107180,
+    "latitude": -12.9367,
+    "longitude": -51.8244,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "RIBEIRAOZINHO": {
+    "name": "Ribeirãozinho",
+    "ibge_id": 5107198,
+    "latitude": -16.4856,
+    "longitude": -52.6924,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "RIO BRANCO": {
+    "name": "Rio Branco",
+    "ibge_id": 5107206,
+    "latitude": -15.2483,
+    "longitude": -58.1259,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "RONDOLANDIA": {
+    "name": "Rondolândia",
+    "ibge_id": 5107578,
+    "latitude": -10.8376,
+    "longitude": -61.4697,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "RONDONOPOLIS": {
+    "name": "Rondonópolis",
+    "ibge_id": 5107602,
+    "latitude": -16.4673,
+    "longitude": -54.6372,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "ROSARIO OESTE": {
+    "name": "Rosário Oeste",
+    "ibge_id": 5107701,
+    "latitude": -14.8259,
+    "longitude": -56.4236,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "SALTO DO CEU": {
+    "name": "Salto do Céu",
+    "ibge_id": 5107750,
+    "latitude": -15.1303,
+    "longitude": -58.1317,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "SANTA CARMEM": {
+    "name": "Santa Carmem",
+    "ibge_id": 5107248,
+    "latitude": -11.9125,
+    "longitude": -55.2263,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SANTA CRUZ DO XINGU": {
+    "name": "Santa Cruz do Xingu",
+    "ibge_id": 5107743,
+    "latitude": -10.1532,
+    "longitude": -52.3953,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "SANTA RITA DO TRIVELATO": {
+    "name": "Santa Rita do Trivelato",
+    "ibge_id": 5107768,
+    "latitude": -13.8146,
+    "longitude": -55.2706,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SANTA TEREZINHA": {
+    "name": "Santa Terezinha",
+    "ibge_id": 5107776,
+    "latitude": -10.4704,
+    "longitude": -50.514,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "SANTO AFONSO": {
+    "name": "Santo Afonso",
+    "ibge_id": 5107263,
+    "latitude": -14.4945,
+    "longitude": -57.0091,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SANTO ANTONIO DO LESTE": {
+    "name": "Santo Antônio do Leste",
+    "ibge_id": 5107792,
+    "latitude": -14.805,
+    "longitude": -53.6075,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "SANTO ANTONIO DO LEVERGER": {
+    "name": "Santo Antônio do Leverger",
+    "ibge_id": 5107800,
+    "latitude": -15.8632,
+    "longitude": -56.0788,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "SAO FELIX DO ARAGUAIA": {
+    "name": "São Félix do Araguaia",
+    "ibge_id": 5107859,
+    "latitude": -11.615,
+    "longitude": -50.6706,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "SAO JOSE DO POVO": {
+    "name": "São José do Povo",
+    "ibge_id": 5107297,
+    "latitude": -16.4549,
+    "longitude": -54.2487,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "SAO JOSE DO RIO CLARO": {
+    "name": "São José do Rio Claro",
+    "ibge_id": 5107305,
+    "latitude": -13.4398,
+    "longitude": -56.7218,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SAO JOSE DO XINGU": {
+    "name": "São José do Xingu",
+    "ibge_id": 5107354,
+    "latitude": -10.7982,
+    "longitude": -52.7486,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SAO JOSE DOS QUATRO MARCOS": {
+    "name": "São José dos Quatro Marcos",
+    "ibge_id": 5107107,
+    "latitude": -15.6276,
+    "longitude": -58.1772,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "SAO PEDRO DA CIPA": {
+    "name": "São Pedro da Cipa",
+    "ibge_id": 5107404,
+    "latitude": -16.0109,
+    "longitude": -54.9176,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "SAPEZAL": {
+    "name": "Sapezal",
+    "ibge_id": 5107875,
+    "latitude": -12.9892,
+    "longitude": -58.7645,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "SERRA NOVA DOURADA": {
+    "name": "Serra Nova Dourada",
+    "ibge_id": 5107883,
+    "latitude": -12.0896,
+    "longitude": -51.4025,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  },
+  "SINOP": {
+    "name": "Sinop",
+    "ibge_id": 5107909,
+    "latitude": -11.8604,
+    "longitude": -55.5091,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "SORRISO": {
+    "name": "Sorriso",
+    "ibge_id": 5107925,
+    "latitude": -12.5425,
+    "longitude": -55.7211,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "TABAPORA": {
+    "name": "Tabaporã",
+    "ibge_id": 5107941,
+    "latitude": -11.3007,
+    "longitude": -56.8312,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "TANGARA DA SERRA": {
+    "name": "Tangará da Serra",
+    "ibge_id": 5107958,
+    "latitude": -14.6229,
+    "longitude": -57.4933,
+    "primary_bioma": "cerrado",
+    "spans_boundary": true,
+    "bioma_type": "mixed",
+    "region": "central"
+  },
+  "TAPURAH": {
+    "name": "Tapurah",
+    "ibge_id": 5108006,
+    "latitude": -12.695,
+    "longitude": -56.5178,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "TERRA NOVA DO NORTE": {
+    "name": "Terra Nova do Norte",
+    "ibge_id": 5108055,
+    "latitude": -10.517,
+    "longitude": -55.231,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "TESOURO": {
+    "name": "Tesouro",
+    "ibge_id": 5108105,
+    "latitude": -16.0809,
+    "longitude": -53.559,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "TORIXOREU": {
+    "name": "Torixoréu",
+    "ibge_id": 5108204,
+    "latitude": -16.2006,
+    "longitude": -52.5571,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "south"
+  },
+  "UNIAO DO SUL": {
+    "name": "União do Sul",
+    "ibge_id": 5108303,
+    "latitude": -11.5308,
+    "longitude": -54.3616,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "VALE DE SAO DOMINGOS": {
+    "name": "Vale de São Domingos",
+    "ibge_id": 5108352,
+    "latitude": -15.286,
+    "longitude": -59.0683,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "VARZEA GRANDE": {
+    "name": "Várzea Grande",
+    "ibge_id": 5108402,
+    "latitude": -15.6458,
+    "longitude": -56.1322,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "central"
+  },
+  "VERA": {
+    "name": "Vera",
+    "ibge_id": 5108501,
+    "latitude": -12.3017,
+    "longitude": -55.3045,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "north"
+  },
+  "VILA BELA DA SANTISSIMA TRINDADE": {
+    "name": "Vila Bela da Santíssima Trindade",
+    "ibge_id": 5105507,
+    "latitude": -15.0068,
+    "longitude": -59.9504,
+    "primary_bioma": "cerrado",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "west"
+  },
+  "VILA RICA": {
+    "name": "Vila Rica",
+    "ibge_id": 5108600,
+    "latitude": -10.0137,
+    "longitude": -51.1186,
+    "primary_bioma": "amazonia_legal",
+    "spans_boundary": false,
+    "bioma_type": "pure",
+    "region": "east"
+  }
+}

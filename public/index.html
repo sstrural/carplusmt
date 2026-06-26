@@ -6,8 +6,15 @@
 <title>CAR-MT · Analisador de Memorial Descritivo</title>
 <meta name="description" content="Sistema para processar memoriais descritivos de imóveis rurais e gerar relatórios para o SIMCAR-MT">
 <meta name="keywords" content="CAR, SIMCAR, memorial descritivo, georreferenciamento, Mato Grosso, SEMA-MT">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231b3a2d'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%23c49a3c' stroke-width='5'/%3E%3Cpath d='M35 50 Q50 35 Q65 50 Q50 65 Z' fill='%23c49a3c'/%3E%3C/svg%3E">
-<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231b3a2d'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%23c49a3c' stroke-width='5'/%3E%3Cpath d='M50 30 L70 50 L50 70 L30 50 Z' fill='%23c49a3c'/%3E%3C/svg%3E">
+<script>
+  if (window.location.protocol.startsWith('http')) {
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = './manifest.json';
+    document.head.appendChild(link);
+  }
+</script>
 <meta name="theme-color" content="#1b3a2d">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -525,7 +532,7 @@ textarea {
       <svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="45" fill="#1b3a2d"/>
         <circle cx="50" cy="50" r="35" fill="none" stroke="#c49a3c" stroke-width="5"/>
-        <path d="M35 50 Q50 35 Q65 50 Q50 65 Z" fill="#c49a3c"/>
+<path d="M35 50 L50 35 L65 50 L50 65 Z" fill="#c49a3c"/>
       </svg>
       <div>
         <div class="logo-name">CAR-MT Analisador</div>
@@ -1488,7 +1495,7 @@ function loadScript(src, check) {
 }
 
 // ── CHAMAR API GROQ ──
-async function callAPI({ messages, maxTokens = 1000 }) {
+async function callAPI({ messages, maxTokens = 1000, retries = 2 }) {
   // Você precisa colocar sua API key do Groq aqui
   // Para produção, use um backend para ocultar a key
   const API_KEY = GROQ_API_KEY; // Substituir com sua API key do Groq
@@ -1497,24 +1504,53 @@ async function callAPI({ messages, maxTokens = 1000 }) {
     throw new Error('API key do Groq não configurada.\n\n1. Acesse https://console.groq.com/keys para obter sua API key gratuita\n2. Abra este arquivo HTML em um editor de texto\n3. Substitua a linha "const GROQ_API_KEY = \'\';" com sua key: "const GROQ_API_KEY = \'sua_key_aqui\';"');
   }
   
-  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify({ 
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: maxTokens, 
-      messages 
-    })
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Erro na API Groq (${resp.status})`);
+  let attempt = 0;
+  while (attempt <= retries) {
+    try {
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({ 
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: maxTokens, 
+          messages 
+        })
+      });
+      
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        
+        if (resp.status === 429 && attempt < retries) {
+          attempt++;
+          // Wait longer for each retry (exponential backoff): 2s, 4s, 8s...
+          const delay = Math.pow(2, attempt) * 1000;
+          console.warn(`Groq API Rate Limit (429). Tentando novamente em ${delay/1000}s... (Tentativa ${attempt}/${retries})`);
+          toast(`Limite da API alcançado. Aguardando ${delay/1000}s para tentar novamente...`, 'warn');
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        
+        if (resp.status === 429) {
+           throw new Error('Limite de uso da API (429) excedido. Por favor, aguarde 1 minuto e tente novamente.');
+        }
+        
+        throw new Error(err?.error?.message || `Erro na API Groq (${resp.status})`);
+      }
+      
+      const data = await resp.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      if (attempt >= retries || error.message.includes('não configurada')) {
+        throw error;
+      }
+      attempt++;
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise(r => setTimeout(r, delay));
+    }
   }
-  const data = await resp.json();
-  return data.choices[0]?.message?.content || '';
 }
 
 function parseJSON(raw) {
@@ -2796,6 +2832,11 @@ function reconfigureAPI() {
 
 // ── SERVICE WORKER PARA PWA ──
 function registerServiceWorker() {
+  // Skip registration when running via file:// protocol to avoid CORS errors
+  if (window.location.protocol === 'file:') {
+    console.warn('ServiceWorker registration skipped (file protocol).');
+    return;
+  }
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
