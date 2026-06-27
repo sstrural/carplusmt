@@ -2819,8 +2819,7 @@ async function dlShapefile() {
 
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
 
-    // USAR O MESMO DADO DO S.shapeData, QUE JÁ FOI GERADO JUNTO COM O KML!
-    // Extrair polígono do shapeData para garantir mesmas coordenadas que o KML
+    // Obter o polígono fechado (mesmas coordenadas do KML)
     let ringGeo = null;
     if (S.shapeData && S.shapeData.features && S.shapeData.features.length > 0) {
       const polygonFeature = S.shapeData.features.find(f => f.geometry && f.geometry.type === 'Polygon');
@@ -2829,69 +2828,75 @@ async function dlShapefile() {
       }
     }
     
-    // Se não tiver shapeData, usar as mesmas coords que o KML
+    // Se não tiver shapeData, gerar as coordenadas do zero (mesma forma que o KML)
     if (!ringGeo) {
-      // Determinar zona UTM a partir do datum selecionado
       const datumVal = getVal('f-datum');
       let zonaDetectada = 21;
       if (datumVal.includes('20')) zonaDetectada = 20;
       if (datumVal.includes('22')) zonaDetectada = 22;
 
-      // Converter UTM para Lat/Lon (mesmo que o KML) para shpwrite
       const coordsGeo = S.vertices.map(v => {
         const latLon = utmToLatLon(v.E, v.N, zonaDetectada);
-        return [latLon.lon, latLon.lat]; // GeoJSON uses [lon, lat] order!
+        return [latLon.lon, latLon.lat]; // GeoJSON: [lon, lat]
       });
-      ringGeo = coordsGeo.concat([coordsGeo[0]]); // fechar polígono
+      ringGeo = coordsGeo.concat([coordsGeo[0]]); // Fechar polígono
     }
-
-    // Features com coordenadas geográficas (Lat/Lon) MESMAS DO KML
-    const atpFeature = {
-      type: "Feature",
-      properties: { ID: 1 },
-      geometry: { type: "Polygon", coordinates: [ringGeo] }
-    };
-    const airFeature = {
-      type: "Feature",
-      properties: { ID: 1, TIPO: "Imóvel Rural", IDENTIFIC: getVal('f-nome') || "Imóvel Rural" },
-      geometry: { type: "Polygon", coordinates: [ringGeo] }
-    };
-
-    // Gerar blobs
-    const atpZipBlob = await window.shpwrite.zip({
-      type: "FeatureCollection",
-      features: [atpFeature]
-    }, { outputType: 'blob', types: { polygon: 'ATP' } });
-
-    const airZipBlob = await window.shpwrite.zip({
-      type: "FeatureCollection",
-      features: [airFeature]
-    }, { outputType: 'blob', types: { polygon: 'AIR' } });
 
     const JSZip = window.shpwrite.JSZip;
     const finalZip = new JSZip();
 
-    // Processar ATP para raiz
-    const atpZip = await JSZip.loadAsync(atpZipBlob);
-    for (const [name, file] of Object.entries(atpZip.files)) {
-      if (!file.dir) {
-        const content = await file.async('uint8array');
-        const fileName = name.split('/').pop(); // Garante que o arquivo fique na raiz
-        finalZip.file(fileName, content);
-      }
-    }
-    finalZip.file('ATP.prj', getSIRGAS2000GeoPRJ()); // Usar PRJ geográfico
+    // Definir todos os 28 shapefiles do modelo, com campos correspondentes
+    const shapefiles = [
+      { name: 'ATP', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AIR', features: [{ type: 'Feature', properties: { ID: 1, TIPO: 'Imóvel Rural', IDENTIFIC: getVal('f-nome') || 'Imóvel Rural' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'ARL', features: [{ type: 'Feature', properties: { ID: 1, IDENTIFIC: '', AVERBACAO: '', SITUACAO: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'ARLREM', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AUAS', features: [{ type: 'Feature', properties: { ID: 1, ABERTURA: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AURD', features: [{ type: 'Feature', properties: { ID: 1, ORIGEM: '', SOBREPOE: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AVN', features: [{ type: 'Feature', properties: { ID: 1, SITUACAO: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_CONSOLIDADA', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_DECLIVIDADE', features: [{ type: 'Feature', properties: { ID: 1, INCLINACAO: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_TOPO_MORRO', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_UMIDA', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_USO_RESTRITO', features: [{ type: 'Feature', properties: { ID: 1, TIPO: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'AREA_ALTITUDE_1800', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'TIPOLOGIA_VEGETAL', features: [{ type: 'Feature', properties: { ID: 1, TIPO: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RIO_ATE_10', features: [{ type: 'Feature', properties: { ID: 1, NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RIO_10_A_50', features: [{ type: 'Feature', properties: { ID: 1, NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RIO_50_A_200', features: [{ type: 'Feature', properties: { ID: 1, NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RIO_200_A_600', features: [{ type: 'Feature', properties: { ID: 1, NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RIO_ACIMA_600', features: [{ type: 'Feature', properties: { ID: 1, NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'NASCENTE', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'VEREDA', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'LAGOA_NATURAL', features: [{ type: 'Feature', properties: { ID: 1, ZONA: '', NOME: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'MANGUEZAL', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RESTINGA', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'UTILIDADE_PUBLICA', features: [{ type: 'Feature', properties: { ID: 1, FINALIDADE: '', DETALHES: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'INTERESSE_SOCIAL', features: [{ type: 'Feature', properties: { ID: 1, FINALIDADE: '', DETALHES: '' }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'RESERVATORIO_ARTIFICIAL', features: [{ type: 'Feature', properties: { ID: 1, ZONA: '', BARRAMENTO: '', OBJETIVO: '', SITUACAO: '', FAIXA_APP: 0 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] },
+      { name: 'BORDA_CHAPADA', features: [{ type: 'Feature', properties: { ID: 1 }, geometry: { type: 'Polygon', coordinates: [ringGeo] } }] }
+    ];
 
-    // Processar AIR para raiz
-    const airZip = await JSZip.loadAsync(airZipBlob);
-    for (const [name, file] of Object.entries(airZip.files)) {
-      if (!file.dir) {
-        const content = await file.async('uint8array');
-        const fileName = name.split('/').pop(); // Garante que o arquivo fique na raiz
-        finalZip.file(fileName, content);
+    // Gerar cada shapefile e adicionar ao ZIP final
+    for (const shp of shapefiles) {
+      const shpZipBlob = await window.shpwrite.zip({
+        type: "FeatureCollection",
+        features: shp.features
+      }, { outputType: 'blob', types: { polygon: shp.name } });
+
+      const shpZip = await JSZip.loadAsync(shpZipBlob);
+      
+      for (const [name, file] of Object.entries(shpZip.files)) {
+        if (!file.dir) {
+          const content = await file.async('uint8array');
+          const fileName = name.split('/').pop(); // Colocar na raiz do ZIP
+          finalZip.file(fileName, content);
+        }
       }
+      
+      // Adicionar PRJ geográfico SIRGAS 2000 (mesmo que o modelo)
+      finalZip.file(`${shp.name}.prj`, getSIRGAS2000GeoPRJ());
     }
-    finalZip.file('AIR.prj', getSIRGAS2000GeoPRJ()); // Usar PRJ geográfico
 
     const finalBlob = await finalZip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     const url = URL.createObjectURL(finalBlob);
@@ -2900,7 +2905,7 @@ async function dlShapefile() {
     a.download = `${nomeArquivo}_shapefile.zip`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('Shapefile (.zip) com ATP e AIR exportado com sucesso! Coordenadas iguais ao KML.', 'ok');
+    toast('Shapefile (.zip) com todos os 28 arquivos exportado com sucesso! Coordenadas iguais ao KML.', 'ok');
   } catch(e) {
     toast('Erro ao gerar Shapefile: ' + e.message, 'erro');
     console.error(e);
