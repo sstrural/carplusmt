@@ -2810,26 +2810,42 @@ function recusarValidacao() {
   toast('Edite os dados e revalide.', 'warn');
 }
 
-// ── Função auxiliar para remover pontos repetidos consecutivos ──
+// ── Função auxiliar para remover pontos repetidos ──
 function removeDuplicatePoints(points) {
   if (points.length < 2) return points;
-  const cleaned = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    const prev = cleaned[cleaned.length - 1];
-    const curr = points[i];
-    // Comparar com 8 casas decimais para evitar problemas de arredondamento
-    if (Math.abs(curr[0] - prev[0]) > 1e-8 || Math.abs(curr[1] - prev[1]) > 1e-8) {
-      cleaned.push(curr);
+  
+  // Primeiro, remover o último ponto se for o mesmo que o primeiro (para limpar)
+  let tempPoints = [...points];
+  const first = tempPoints[0];
+  const last = tempPoints[tempPoints.length - 1];
+  if (Math.abs(first[0] - last[0]) < 1e-8 && Math.abs(first[1] - last[1]) < 1e-8) {
+    tempPoints.pop();
+  }
+  
+  // Agora remover TODOS os pontos duplicados (não só consecutivos)
+  const cleaned = [];
+  const seen = new Set();
+  
+  for (const point of tempPoints) {
+    // Criar uma chave única para o ponto com 8 casas decimais
+    const key = `${point[0].toFixed(8)}|${point[1].toFixed(8)}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      cleaned.push([parseFloat(point[0].toFixed(8)), parseFloat(point[1].toFixed(8))]);
     }
   }
-  // Garantir que o polígono esteja fechado (último ponto igual ao primeiro)
-  if (cleaned.length >= 2) {
-    const first = cleaned[0];
-    const last = cleaned[cleaned.length - 1];
-    if (Math.abs(first[0] - last[0]) > 1e-8 || Math.abs(first[1] - last[1]) > 1e-8) {
-      cleaned.push(first);
-    }
+  
+  // Garantir que o polígono tenha pelo menos 3 pontos
+  if (cleaned.length < 3) {
+    return points;
   }
+  
+  // Fechar o polígono (adicionar o primeiro ponto no final, se necessário)
+  const lastClean = cleaned[cleaned.length - 1];
+  if (Math.abs(cleaned[0][0] - lastClean[0]) > 1e-8 || Math.abs(cleaned[0][1] - lastClean[1]) > 1e-8) {
+    cleaned.push([cleaned[0][0], cleaned[0][1]]);
+  }
+  
   return cleaned;
 }
 
