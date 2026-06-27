@@ -364,11 +364,15 @@ export async function calculateNativeCoverage(imovelPolygon, rasterData, options
 
       // Process each pixel in the raster
       for (const pixel of rasterData.data) {
-        if (!pixel || pixel.value === null || pixel.value === undefined) continue;
+        if (!pixel || pixel.value === null || pixel.value === undefined) {
+          continue;
+        }
 
         // Check if pixel is within imovel bounds (simple check)
         // In production, would use proper point-in-polygon test
-        if (pixel.in_imovel === false) continue;
+        if (pixel.in_imovel === false) {
+          continue;
+        }
 
         result.pixels_in_imovel++;
 

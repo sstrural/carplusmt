@@ -253,7 +253,7 @@ export async function detectAPPSlopes(imovelPolygon, demTileData = null, options
 
   const slopes = [];
   const hilltops = [];
-  let totalSlopeArea = 0;
+  const totalSlopeArea = 0;
   let totalHilltopArea = 0;
 
   // Simple slope classification from DEM pixels
@@ -820,8 +820,12 @@ function processNascente(feature, imovelPolygon, bufferRadius, boundaryFlagDista
  * @returns {string} Category description
  */
 function getWidthCategory(width) {
-  if (width < 10) return '< 10m';
-  if (width <= 50) return '10-50m';
+  if (width < 10) {
+    return '< 10m';
+  }
+  if (width <= 50) {
+    return '10-50m';
+  }
   return '> 50m';
 }
 
@@ -959,7 +963,9 @@ function isPointInPolygon(point, ring) {
     const [xi, yi] = ring[i];
     const [xj, yj] = ring[j];
     const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-    if (intersect) inside = !inside;
+    if (intersect) {
+      inside = !inside;
+    }
   }
   return inside;
 }

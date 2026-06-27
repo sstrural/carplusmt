@@ -38,11 +38,16 @@ self.addEventListener('fetch', event => {
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
+          
+          // Apenas tenta armazenar no cache se for um protocolo suportado (http/https)
+          if (event.request.url.startsWith('http')) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              }).catch(err => console.log('Erro ao fazer cache:', err));
+          }
+          
           return response;
         });
       })

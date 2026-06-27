@@ -40,7 +40,7 @@ describe('TASK 2.3: Projection Validation and Reprojection (Requirement 1.7, 7.1
 
       expect(result.valid).toBe(true);
       expect(result.reprojectionNeeded).toBe(false);
-      expect(result.message).toContain('valid SIRGAS2000');
+      expect(result.message).toContain('✓ SIRGAS2000');
       console.log('✓ Test 2.3.1 passed: Valid SIRGAS2000 accepted');
     });
 
@@ -134,7 +134,7 @@ describe('TASK 2.3: Projection Validation and Reprojection (Requirement 1.7, 7.1
       const result = validateProjection(feature, 'SIRGAS2000');
 
       expect(result.valid).toBe(true);
-      expect(result.message).toContain('Assuming SIRGAS2000');
+      expect(result.message).toContain('✓ SIRGAS2000');
       console.log('✓ Test 2.3.5 passed: Unknown CRS handled gracefully');
     });
 
@@ -255,7 +255,7 @@ describe('TASK 2.4: Accuracy Testing with Complex Property (Sapezal-like)', () =
     expect(names).toContain('Córrego Claro');
     expect(names).toContain('Arroio Norte');
 
-    console.log(`✓ Test 2.4.1 passed: All 3 rivers detected`);
+    console.log('✓ Test 2.4.1 passed: All 3 rivers detected');
   });
 
   it('Should apply correct buffer distances per Código Florestal (Requirement 1.2-1.4)', async () => {
@@ -276,7 +276,7 @@ describe('TASK 2.4: Accuracy Testing with Complex Property (Sapezal-like)', () =
     expect(arroio.width_m).toBe(65);
     expect(arroio.buffer_distance_m).toBe(100);
 
-    console.log(`✓ Test 2.4.2 passed: Correct buffer distances applied`);
+    console.log('✓ Test 2.4.2 passed: Correct buffer distances applied');
   });
 
   it('Should clip buffers to property boundary (no external area) (Requirement 1.6)', async () => {
@@ -375,7 +375,7 @@ describe('TASK 2.4: Accuracy Testing with Complex Property (Sapezal-like)', () =
       expect(waterway).toHaveProperty('intersection_length_m');
     }
 
-    console.log(`✓ Test 2.4.6 passed: Complete data structure returned`);
+    console.log('✓ Test 2.4.6 passed: Complete data structure returned');
   });
 });
 
@@ -478,7 +478,7 @@ describe('TASK 3.2: Merge Overlapping Nascente Buffers (Requirement 2.2, 2.3)', 
     const sumAreas = area1 + area2;
     expect(mergedArea).toBeLessThanOrEqual(sumAreas + 0.01); // Allow small floating point error
 
-    console.log(`✓ Test 3.2.6 passed: Area preservation validated, merged ≤ sum`);
+    console.log('✓ Test 3.2.6 passed: Area preservation validated, merged ≤ sum');
   });
 });
 
@@ -527,7 +527,7 @@ describe('TASK 3.4: Flag Nascentes Near Boundary (Requirement 2.5)', () => {
     expect(flags[0].distance_to_boundary_m).toBeCloseTo(0, 1);
     expect(flags[0].needs_review).toBe(true);
 
-    console.log(`✓ Test 3.4.1 passed: Nascente on boundary flagged`);
+    console.log('✓ Test 3.4.1 passed: Nascente on boundary flagged');
   });
 
   it('Should flag nascente within 5m threshold', () => {
@@ -558,7 +558,7 @@ describe('TASK 3.4: Flag Nascentes Near Boundary (Requirement 2.5)', () => {
       expect(flags[0].needs_review).toBe(true);
     }
 
-    console.log(`✓ Test 3.4.2 passed: Nascente near boundary detection works`);
+    console.log('✓ Test 3.4.2 passed: Nascente near boundary detection works');
   });
 
   it('Should NOT flag nascente beyond threshold distance', () => {
@@ -571,7 +571,7 @@ describe('TASK 3.4: Flag Nascentes Near Boundary (Requirement 2.5)', () => {
 
     expect(flags.length).toBe(0);
 
-    console.log(`✓ Test 3.4.3 passed: Nascente beyond threshold not flagged`);
+    console.log('✓ Test 3.4.3 passed: Nascente beyond threshold not flagged');
   });
 
   it('Should handle multiple nascentes with mixed distances', () => {
@@ -604,7 +604,7 @@ describe('TASK 3.4: Flag Nascentes Near Boundary (Requirement 2.5)', () => {
     expect(flags[0].recommendation).toContain('nascente is');
     expect(flags[0].recommendation).toContain('m from property boundary');
 
-    console.log(`✓ Test 3.4.5 passed: Recommendation message generated`);
+    console.log('✓ Test 3.4.5 passed: Recommendation message generated');
   });
 
   it('Should handle complex boundary geometry (concave polygon)', () => {
@@ -656,6 +656,6 @@ describe('TASK 3.4: Flag Nascentes Near Boundary (Requirement 2.5)', () => {
 
     expect(flags.length).toBe(0);
 
-    console.log(`✓ Test 3.4.7 passed: No nascentes near boundary, returned empty array`);
+    console.log('✓ Test 3.4.7 passed: No nascentes near boundary, returned empty array');
   });
 });

@@ -123,7 +123,7 @@ describe('TASK 4.3: Hilltop Detection - Local Maxima (Requirement 3.3)', () => {
       expect(result.total_topo_area_ha).toBeGreaterThan(0);
 
       console.log(
-        `✓ Test 4.3.1 passed: Single peak detected, ` +
+        '✓ Test 4.3.1 passed: Single peak detected, ' +
         `summits=${result.summits_count}, area=${result.total_topo_area_ha} ha`
       );
     });
@@ -177,7 +177,7 @@ describe('TASK 4.3: Hilltop Detection - Local Maxima (Requirement 3.3)', () => {
       expect(result.total_topo_area_ha).toBeGreaterThan(0);
 
       console.log(
-        `✓ Test 4.3.4 passed: Multiple peaks detected, ` +
+        '✓ Test 4.3.4 passed: Multiple peaks detected, ' +
         `summits=${result.summits_count}, zones=${result.hilltop_zones.length}`
       );
     });

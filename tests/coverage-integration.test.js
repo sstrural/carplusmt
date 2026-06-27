@@ -156,7 +156,7 @@ describe('Coverage Integration - Native Coverage Calculation (Task 6.3)', () => 
       expect(result.total_coverage_ha).toBe(0);
       expect(result.coverage_percentage).toBe(0);
 
-      console.log(`✓ Test 2 passed: Empty raster → coverage = 0`);
+      console.log('✓ Test 2 passed: Empty raster → coverage = 0');
     });
 
     /**
@@ -295,7 +295,7 @@ describe('Coverage Integration - Native Coverage Calculation (Task 6.3)', () => 
       );
 
       console.log(
-        `✓ Property 6 passed: Coverage area ≤ imovel area for 200 random combinations of properties and rasters`
+        '✓ Property 6 passed: Coverage area ≤ imovel area for 200 random combinations of properties and rasters'
       );
     });
 
@@ -353,7 +353,7 @@ describe('Coverage Integration - Native Coverage Calculation (Task 6.3)', () => 
       );
 
       console.log(
-        `✓ Property 6b passed: Sum of vegetation types = total coverage for 150 random examples`
+        '✓ Property 6b passed: Sum of vegetation types = total coverage for 150 random examples'
       );
     });
 
@@ -395,7 +395,7 @@ describe('Coverage Integration - Native Coverage Calculation (Task 6.3)', () => 
       );
 
       console.log(
-        `✓ Property 6c passed: Monotonicity verified for 100 random pixel count pairs`
+        '✓ Property 6c passed: Monotonicity verified for 100 random pixel count pairs'
       );
     });
 
@@ -451,7 +451,7 @@ describe('Coverage Integration - Native Coverage Calculation (Task 6.3)', () => 
       );
 
       console.log(
-        `✓ Property 6d passed: Coverage percentage always in [0, 100] for 150 random examples`
+        '✓ Property 6d passed: Coverage percentage always in [0, 100] for 150 random examples'
       );
     });
   });
@@ -629,7 +629,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('compliant');
       expect(result.compliant).toBe(true);
 
-      console.log(`✓ Test 2 passed: Compliant property, deficitHa=0`);
+      console.log('✓ Test 2 passed: Compliant property, deficitHa=0');
     });
 
     /**
@@ -644,7 +644,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('compliant');
       expect(result.compliant).toBe(true);
 
-      console.log(`✓ Test 3 passed: Exact match, deficitHa=0`);
+      console.log('✓ Test 3 passed: Exact match, deficitHa=0');
     });
 
     /**
@@ -659,7 +659,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('compliant');
       expect(result.warnings.length).toBeGreaterThan(0); // Should have warning about zero requirement
 
-      console.log(`✓ Test 4 passed: Zero requirement handled, warning generated`);
+      console.log('✓ Test 4 passed: Zero requirement handled, warning generated');
     });
 
     /**
@@ -693,7 +693,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result).toHaveProperty('errors');
       expect(result).toHaveProperty('warnings');
 
-      console.log(`✓ Test 6 passed: All required fields present in result object`);
+      console.log('✓ Test 6 passed: All required fields present in result object');
     });
 
     /**
@@ -756,7 +756,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.warnings.length).toBeGreaterThan(0); // Should warn about excess coverage
       expect(result.warnings[0]).toContain('significantly exceeds');
 
-      console.log(`✓ Test 10 passed: Excess coverage warning generated`);
+      console.log('✓ Test 10 passed: Excess coverage warning generated');
     });
   });
 
@@ -772,7 +772,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('rlMinima');
 
-      console.log(`✓ Error test passed: Null rlMinima rejected`);
+      console.log('✓ Error test passed: Null rlMinima rejected');
     });
 
     /**
@@ -786,7 +786,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('currentCoverage');
 
-      console.log(`✓ Error test passed: Null currentCoverage rejected`);
+      console.log('✓ Error test passed: Null currentCoverage rejected');
     });
 
     /**
@@ -799,7 +799,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('error');
       expect(result.errors.length).toBeGreaterThan(0);
 
-      console.log(`✓ Error test passed: Non-numeric rlMinima rejected`);
+      console.log('✓ Error test passed: Non-numeric rlMinima rejected');
     });
 
     /**
@@ -812,7 +812,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('error');
       expect(result.errors.length).toBeGreaterThan(0);
 
-      console.log(`✓ Error test passed: Non-numeric currentCoverage rejected`);
+      console.log('✓ Error test passed: Non-numeric currentCoverage rejected');
     });
 
     /**
@@ -826,7 +826,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('negative');
 
-      console.log(`✓ Error test passed: Negative rlMinima rejected`);
+      console.log('✓ Error test passed: Negative rlMinima rejected');
     });
 
     /**
@@ -840,7 +840,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('negative');
 
-      console.log(`✓ Error test passed: Negative currentCoverage rejected`);
+      console.log('✓ Error test passed: Negative currentCoverage rejected');
     });
 
     /**
@@ -853,7 +853,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('error');
       expect(result.errors[0]).toContain('rlMinima');
 
-      console.log(`✓ Error test passed: Undefined rlMinima rejected`);
+      console.log('✓ Error test passed: Undefined rlMinima rejected');
     });
 
     /**
@@ -866,7 +866,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.status).toBe('error');
       expect(result.errors.length).toBeGreaterThan(0);
 
-      console.log(`✓ Error test passed: Both null parameters rejected`);
+      console.log('✓ Error test passed: Both null parameters rejected');
     });
   });
 
@@ -900,7 +900,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 500 }
       );
 
-      console.log(`✓ Property 4 passed: RL Deficit is non-negative for 500 random examples`);
+      console.log('✓ Property 4 passed: RL Deficit is non-negative for 500 random examples');
     });
 
     /**
@@ -931,7 +931,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 300 }
       );
 
-      console.log(`✓ Property 4b passed: Monotonicity verified for 300 random examples`);
+      console.log('✓ Property 4b passed: Monotonicity verified for 300 random examples');
     });
 
     /**
@@ -958,7 +958,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 400 }
       );
 
-      console.log(`✓ Property 4c passed: Deficit percentage bounded in [0, 100]% for 400 examples`);
+      console.log('✓ Property 4c passed: Deficit percentage bounded in [0, 100]% for 400 examples');
     });
 
     /**
@@ -991,7 +991,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 400 }
       );
 
-      console.log(`✓ Property 4d passed: Compliance status always correct for 400 examples`);
+      console.log('✓ Property 4d passed: Compliance status always correct for 400 examples');
     });
 
     /**
@@ -1018,7 +1018,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 500 }
       );
 
-      console.log(`✓ Property 4e passed: Formula MAX(0, rlMinima - coverage) verified for 500 examples`);
+      console.log('✓ Property 4e passed: Formula MAX(0, rlMinima - coverage) verified for 500 examples');
     });
 
     /**
@@ -1052,7 +1052,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
         { numRuns: 300 }
       );
 
-      console.log(`✓ Property 4f passed: Additivity verified for 300 examples`);
+      console.log('✓ Property 4f passed: Additivity verified for 300 examples');
     });
   });
 
@@ -1095,7 +1095,7 @@ describe('RL Deficit Calculation (Task 6.5)', () => {
       expect(result.compliant).toBe(true);
 
       console.log(
-        `✓ Scenario 2 passed: Cerrado property compliant, deficitHa=0`
+        '✓ Scenario 2 passed: Cerrado property compliant, deficitHa=0'
       );
     });
 

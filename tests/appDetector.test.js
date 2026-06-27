@@ -191,7 +191,7 @@ describe('APP Detector - Waterways (Task 2.1)', () => {
       expect(result.app_total_ha).toBe(0);
       expect(result.detected_count).toBe(0);
 
-      console.log(`✓ Test 4 passed: No rivers → empty result, app_total = 0`);
+      console.log('✓ Test 4 passed: No rivers → empty result, app_total = 0');
     });
   });
 
@@ -240,7 +240,7 @@ describe('APP Detector - Waterways (Task 2.1)', () => {
       );
 
       console.log(
-        `✓ Property 1 passed: Buffer distance correctly assigned for 500 random widths (5m-200m+)`
+        '✓ Property 1 passed: Buffer distance correctly assigned for 500 random widths (5m-200m+)'
       );
     });
 
@@ -310,7 +310,7 @@ describe('APP Detector - Waterways (Task 2.1)', () => {
       );
 
       console.log(
-        `✓ Property 2 passed: APP area ≤ imóvel area for 300 random properties and watercourses (width 5m-150m)`
+        '✓ Property 2 passed: APP area ≤ imóvel area for 300 random properties and watercourses (width 5m-150m)'
       );
     });
 
@@ -345,7 +345,7 @@ describe('APP Detector - Waterways (Task 2.1)', () => {
       );
 
       console.log(
-        `✓ Property 3 passed: Buffer area is positive when intersection exists (50 runs)`
+        '✓ Property 3 passed: Buffer area is positive when intersection exists (50 runs)'
       );
     });
   });
@@ -673,7 +673,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
       // 30° slope is below threshold, so APP_ENCOSTA area should be 0 or minimal
       expect(result.encosta_area_ha).toBeDefined();
       
-      console.log(`✓ Test 3 passed: 30° slope (< 45°) does not trigger APP_ENCOSTA classification`);
+      console.log('✓ Test 3 passed: 30° slope (< 45°) does not trigger APP_ENCOSTA classification');
     });
 
     /**
@@ -694,7 +694,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
         console.log(`  ✓ Angle ${angle}° processed correctly`);
       }
 
-      console.log(`✓ Test 4 passed: Boundary values (44.9°, 45°, 45.1°) all processed`);
+      console.log('✓ Test 4 passed: Boundary values (44.9°, 45°, 45.1°) all processed');
     });
 
     /**
@@ -715,7 +715,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
       expect(steepResult).toBeDefined();
       expect(steepResult.available).toBe(true);
 
-      console.log(`✓ Test 5 passed: Extreme slopes (0°, 90°) handled`);
+      console.log('✓ Test 5 passed: Extreme slopes (0°, 90°) handled');
     });
 
     /**
@@ -733,7 +733,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
       expect(result.available).toBe(true);
       expect(result.slope_threshold_degrees).toBe(45);
       
-      console.log(`✓ Test 6 passed: Noisy DEM at 45° boundary classified correctly`);
+      console.log('✓ Test 6 passed: Noisy DEM at 45° boundary classified correctly');
     });
 
     /**
@@ -760,7 +760,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
         expect(result.available).toBe(true);
       });
 
-      console.log(`✓ Test 7 passed: All slope angles [0°, 20°, 44.9°, 45°, 45.1°, 60°, 90°] processed`);
+      console.log('✓ Test 7 passed: All slope angles [0°, 20°, 44.9°, 45°, 45.1°, 60°, 90°] processed');
     });
   });
 
@@ -1031,7 +1031,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
       expect(result.warning).toBeDefined();
       expect(result.app_total_ha).toBe(0);
 
-      console.log(`✓ Edge case passed: Missing DEM handled gracefully`);
+      console.log('✓ Edge case passed: Missing DEM handled gracefully');
     });
 
     it('Should warn about DEM resolution > 30m', async () => {
@@ -1060,7 +1060,7 @@ describe('APP Detector - Slopes (Task 4.2 - Property 7)', () => {
       expect(result.dem_resolution_adequate).toBe(false);
       expect(result.warnings).toBeDefined();
       
-      console.log(`✓ Edge case passed: Coarse DEM resolution warned`);
+      console.log('✓ Edge case passed: Coarse DEM resolution warned');
     });
   });
 

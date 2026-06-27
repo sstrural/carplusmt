@@ -203,16 +203,16 @@ describe('HydrographyIndex + DEMLoader Integration', () => {
           geometry:
             i % 3 === 2
               ? {
-                  type: 'Point',
-                  coordinates: [lon, lat],
-                }
+                type: 'Point',
+                coordinates: [lon, lat],
+              }
               : {
-                  type: 'LineString',
-                  coordinates: [
-                    [lon, lat],
-                    [lon + 0.01, lat + 0.01],
-                  ],
-                },
+                type: 'LineString',
+                coordinates: [
+                  [lon, lat],
+                  [lon + 0.01, lat + 0.01],
+                ],
+              },
         };
 
         hydrographyIndex.insert(feature);

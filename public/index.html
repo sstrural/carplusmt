@@ -560,17 +560,19 @@ textarea {
 
     <div class="drop-zone" id="drop-zone">
       <span class="dz-icon">📂</span>
-      <div class="dz-title">Importe o Memorial Descritivo e a ART</div>
+      <div class="dz-title">Importe o Memorial Descritivo, ART ou Shapefile</div>
       <div class="dz-sub">
         Arraste os arquivos aqui ou clique para selecionar.<br>
-        A IA extrai automaticamente todas as informações do memorial e da ART.
+        Importe um shapefile para usar suas coordenadas diretamente.
       </div>
       <div class="format-chips">
         <span class="chip">PDF</span>
         <span class="chip">DOCX</span>
         <span class="chip">TXT</span>
+        <span class="chip">SHP</span>
+        <span class="chip">ZIP</span>
       </div>
-      <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt" multiple>
+      <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt,.shp,.dbf,.shx,.prj,.zip" multiple>
     </div>
 
     <div class="divider">ou</div>
@@ -1385,16 +1387,25 @@ async function processFiles(files) {
   try {
     await nextStep(100);
 
+    // Verificar se temos arquivos de shapefile
+    const shpFiles = Array.from(files).filter(f => ['shp','dbf','shx','prj'].includes(f.name.split('.').pop().toLowerCase()));
+    const zipFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.zip'));
+    const docFiles = Array.from(files).filter(f => ['pdf','docx','doc','txt'].includes(f.name.split('.').pop().toLowerCase()));
+
+    if (shpFiles.length > 0 || zipFiles.length > 0) {
+      // Processar shapefile
+      await nextStep(200);
+      await processShapefile(shpFiles, zipFiles, nextStep);
+      return;
+    }
+
+    // Processar documentos (PDF, DOCX, TXT) como antes
     let textoCombinado = '';
     const nomesArquivos = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < docFiles.length; i++) {
+      const file = docFiles[i];
       const ext = file.name.split('.').pop().toLowerCase();
-      if (!['pdf','docx','doc','txt'].includes(ext)) {
-        toast(`Arquivo ${file.name} não suportado. Pulando...`, 'warn');
-        continue;
-      }
       nomesArquivos.push(file.name);
       
       let textoArquivo = '';
@@ -1431,6 +1442,205 @@ async function processFiles(files) {
     fi.value = '';
     toast(err.message || 'Erro ao processar os arquivos.');
   }
+}
+
+// ── PROCESSAR SHAPEFILE ──
+async function processShapefile(shpFiles, zipFiles, nextStep) {
+  // Carregar biblioteca de shapefile
+  await loadScript('https://unpkg.com/shapefile@0.6.6/dist/shp.js', () => window.shp);
+  
+  await nextStep(200);
+  
+  let source;
+  if (zipFiles.length > 0) {
+    // Processar ZIP
+    const zipBuffer = await zipFiles[0].arrayBuffer();
+    source = await window.shp(zipBuffer);
+  } else {
+    // Processar arquivos individuais
+    const shpFile = shpFiles.find(f => f.name.toLowerCase().endsWith('.shp'));
+    if (!shpFile) throw new Error('Arquivo .shp não encontrado.');
+    const shpBuffer = await shpFile.arrayBuffer();
+    
+    // Procurar arquivos complementares (.shx, .dbf, .prj)
+    const shxFile = shpFiles.find(f => f.name.toLowerCase().endsWith('.shx'));
+    const dbfFile = shpFiles.find(f => f.name.toLowerCase().endsWith('.dbf'));
+    const prjFile = shpFiles.find(f => f.name.toLowerCase().endsWith('.prj'));
+    
+    const shxBuffer = shxFile ? await shxFile.arrayBuffer() : null;
+    const dbfBuffer = dbfFile ? await dbfFile.arrayBuffer() : null;
+    const prjText = prjFile ? await prjFile.text() : null;
+    
+    source = await window.shp(shpBuffer, shxBuffer, dbfBuffer);
+  }
+
+  await nextStep(200);
+  
+  // Extrair feições
+  const features = [];
+  let bbox = [Infinity, Infinity, -Infinity, -Infinity];
+  let coordsList = [];
+  
+  for await (const feature of source) {
+    features.push(feature);
+    
+    // Extrair coordenadas e calcular bbox
+    if (feature.geometry && feature.geometry.coordinates) {
+      const flatCoords = flattenCoords(feature.geometry.coordinates);
+      coordsList = coordsList.concat(flatCoords);
+      flatCoords.forEach(([lon, lat]) => {
+        bbox[0] = Math.min(bbox[0], lon);
+        bbox[1] = Math.min(bbox[1], lat);
+        bbox[2] = Math.max(bbox[2], lon);
+        bbox[3] = Math.max(bbox[3], lat);
+      });
+    }
+  }
+
+  await nextStep(200);
+  
+  if (coordsList.length === 0) throw new Error('Nenhuma coordenada encontrada no shapefile.');
+  
+  // Detectar fuso UTM
+  let zonaDetectada = detectUTMZoneFromCoords(coordsList[0]);
+  
+  // Atualizar formulário
+  setVal('f-inf-lon', bbox[0].toFixed(8));
+  setVal('f-inf-lat', bbox[1].toFixed(8));
+  setVal('f-sup-lon', bbox[2].toFixed(8));
+  setVal('f-sup-lat', bbox[3].toFixed(8));
+  
+  const datumSel = $('f-datum');
+  if (zonaDetectada === 20) datumSel.value = 'SIRGAS2000_20S';
+  else if (zonaDetectada === 22) datumSel.value = 'SIRGAS2000_22S';
+  else datumSel.value = 'SIRGAS2000_21S';
+  
+  // Criar vértices a partir das coordenadas
+  S.vertices = coordsList.map((coord, i) => {
+    const utm = latLonToUTM(coord[1], coord[0], zonaDetectada);
+    return { nome: `V${i+1}`, E: utm.easting, N: utm.northing };
+  });
+  
+  S.nomeImovel = features[0]?.properties?.NOME || features[0]?.properties?.IDENTIFIC || 'Imóvel Importado';
+  
+  // Gerar KML usando as mesmas coordenadas
+  const coordsGeo = coordsList.map(([lon, lat]) => ({ lon, lat }));
+  S.kml = buildKML(S.vertices, coordsGeo, S.nomeImovel, 0, '');
+  
+  // Gerar Shapefile usando as mesmas coordenadas
+  const areaNum = 0;
+  const biomaVal = getVal('f-bioma');
+  const biomaNome = biomaVal === 'amz' ? 'Amazônia' : 'Cerrado';
+  
+  S.shapeData = buildShapeFeatureCollection(S.vertices, coordsGeo, {
+    nome_imovel: S.nomeImovel,
+    area: '0',
+    perimetro: '0',
+    municipio: '',
+    uf: 'MT',
+    matricula: '',
+    ccir: '',
+    cns: '',
+    prop_nome: '',
+    prop_cpf: '',
+    datum: getVal('f-datum'),
+    fuso: `${zonaDetectada}S`,
+    meridiano: zonaDetectada === 20 ? '-63' : zonaDetectada === 22 ? '-51' : '-57',
+    verts_totais: S.vertices.length,
+    gerado_por: 'CAR-MT Analisador',
+    gerado_em: new Date().toISOString(),
+    atp: areaNum,
+    air: areaNum,
+    bioma: biomaNome,
+    vegetacao_existente: 0
+  }, zonaDetectada);
+
+  await nextStep(200);
+  await nextStep(100);
+
+  // Atualizar badge
+  const fileName = zipFiles[0]?.name || shpFiles.find(f => f.name.toLowerCase().endsWith('.shp'))?.name || 'Shapefile';
+  $('file-badge').innerHTML = `
+    <div class="file-badge">
+      <div class="fb-icon">🗺️</div>
+      <div>
+        <div class="fb-name">${fileName}</div>
+        <div class="fb-meta">${coordsList.length} coordenadas · Fuso ${zonaDetectada}S · KML e Shapefile gerados</div>
+      </div>
+    </div>`;
+
+  const proc = $('proc-upload');
+  proc.classList.remove('visible');
+  proc.style.display = 'none';
+  showPanel('panel-result');
+  setStep(3);
+  
+  // Renderizar resultado diretamente
+  renderResult({
+    score: 100,
+    classificacao: 'Shapefile Importado',
+    resumo: 'Coordenadas do shapefile importadas com sucesso.',
+    campos: {},
+    checklist: [{ item: 'Shapefile importado', status: 'ok' }, { item: 'KML gerado', status: 'ok' }, { item: 'Coordenadas sincronizadas', status: 'ok' }],
+    alertas: [{ tipo: 'ok', msg: 'KML e Shapefile usam as mesmas coordenadas.' }],
+    orientacoes: ['Verifique as coordenadas e preencha os dados restantes do imóvel.']
+  });
+}
+
+// ── AUXILIARES PARA SHAPEFILE ──
+function flattenCoords(coords) {
+  const flat = [];
+  function walk(arr) {
+    if (Array.isArray(arr)) {
+      if (arr.length === 2 && typeof arr[0] === 'number' && typeof arr[1] === 'number') {
+        flat.push(arr);
+      } else {
+        arr.forEach(walk);
+      }
+    }
+  }
+  walk(coords);
+  return flat;
+}
+
+function detectUTMZoneFromCoords([lon, lat]) {
+  const zone = Math.floor((lon + 180) / 6) + 1;
+  return zone;
+}
+
+// Função inversa de utmToLatLon: converte Lat/Lon para UTM
+function latLonToUTM(lat, lon, zone) {
+  const a = 6378137;
+  const f = 1 / 298.257223563;
+  const k0 = 0.9996;
+  const e = Math.sqrt(2*f - f*f);
+  const e2 = e*e;
+  const e4 = e2*e2;
+  const e6 = e4*e2;
+  
+  const latRad = lat * Math.PI / 180;
+  const lonRad = lon * Math.PI / 180;
+  const lonOrigin = (zone - 1) * 6 - 177;
+  const lonOriginRad = lonOrigin * Math.PI / 180;
+  
+  const N = a / Math.sqrt(1 - e2 * Math.sin(latRad)**2);
+  const T = Math.tan(latRad)**2;
+  const C = e2 / (1 - e2) * Math.cos(latRad)**2;
+  const A = Math.cos(latRad) * (lonRad - lonOriginRad);
+  
+  const M = a * (
+    (1 - e2/4 - 3*e4/64 - 5*e6/256) * latRad
+    - (3*e2/8 + 3*e4/32 + 45*e6/1024) * Math.sin(2*latRad)
+    + (15*e4/256 + 45*e6/1024) * Math.sin(4*latRad)
+    - (35*e6/3072) * Math.sin(6*latRad)
+  );
+  
+  const easting = k0 * N * (A + (1-T+C)*A**3/6 + (5-18*T+T*T+72*C-58*e2)*A**5/120) + 500000;
+  let northing = k0 * (M + N * Math.tan(latRad) * (A**2/2 + (5-T+9*C+4*C*C)*A**4/24 + (61-58*T+T*T+600*C-330*e2)*A**6/720));
+  
+  if (lat < 0) northing += 10000000;
+  
+  return { easting, northing, zone };
 }
 
 // ── EXTRAIR PDF ──
@@ -1936,17 +2146,31 @@ function buildKML(vertices, coords, nome, area, proprietario) {
   <Document>
     <name>${esc(nome)}</name>
     <description>Área: ${esc(area)} ha | Proprietário: ${esc(proprietario)} | Gerado: CAR-MT Analisador</description>
-    <Style id="perimetro">
-      <LineStyle><color>ff0055ff</color><width>2</width></LineStyle>
-      <PolyStyle><color>280055ff</color></PolyStyle>
+    <Style id="atp">
+      <LineStyle><color>ff00aa44</color><width>2</width></LineStyle>
+      <PolyStyle><color>3300aa44</color></PolyStyle>
+    </Style>
+    <Style id="air">
+      <LineStyle><color>ff00ffff</color><width>2</width></LineStyle>
+      <PolyStyle><color>3300ffff</color></PolyStyle>
     </Style>
     <Style id="vertice">
       <IconStyle><color>ff00aa44</color><scale>.7</scale></IconStyle>
       <LabelStyle><scale>.6</scale></LabelStyle>
     </Style>
     <Placemark>
-      <name>${esc(nome)} — Perímetro</name>
-      <styleUrl>#perimetro</styleUrl>
+      <name>${esc(nome)} — ATP (Área Total do Imóvel)</name>
+      <styleUrl>#atp</styleUrl>
+      <Polygon>
+        <outerBoundaryIs><LinearRing><coordinates>
+${coordStr}
+${closeCoord}
+        </coordinates></LinearRing></outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>${esc(nome)} — AIR (Área de Interesse Rural)</name>
+      <styleUrl>#air</styleUrl>
       <Polygon>
         <outerBoundaryIs><LinearRing><coordinates>
 ${coordStr}
@@ -2583,51 +2807,6 @@ function recusarValidacao() {
   toast('Edite os dados e revalide.', 'warn');
 }
 
-// ── UTILITÁRIO: Converter UTM → Lat/Lon (SIRGAS2000 = WGS84) ──
-function utmToLatLon(E, N, zona, hemisfério = 'S') {
-  // Constantes WGS84 / GRS80
-  const a = 6378137.0;
-  const f = 1 / 298.257222101;
-  const b = a * (1 - f);
-  const e2 = (a*a - b*b) / (a*a);
-  const e_p2 = e2 / (1 - e2);
-  const k0 = 0.9996;
-
-  const x = E - 500000.0;
-  let y = N;
-  if (hemisfério === 'S') y = N - 10000000.0;
-
-  const M = y / k0;
-  const mu = M / (a * (1 - e2/4 - 3*e2*e2/64 - 5*e2*e2*e2/256));
-
-  const e1 = (1 - Math.sqrt(1-e2)) / (1 + Math.sqrt(1-e2));
-  const phi1 = mu
-    + (3*e1/2 - 27*e1*e1*e1/32) * Math.sin(2*mu)
-    + (21*e1*e1/16 - 55*e1*e1*e1*e1/32) * Math.sin(4*mu)
-    + (151*e1*e1*e1/96) * Math.sin(6*mu);
-
-  const N1 = a / Math.sqrt(1 - e2 * Math.sin(phi1)*Math.sin(phi1));
-  const T1 = Math.tan(phi1)*Math.tan(phi1);
-  const C1 = e_p2 * Math.cos(phi1)*Math.cos(phi1);
-  const R1 = a*(1-e2) / Math.pow(1 - e2*Math.sin(phi1)*Math.sin(phi1), 1.5);
-  const D = x / (N1 * k0);
-
-  const lat = phi1 - (N1*Math.tan(phi1)/R1)*(
-    D*D/2
-    - (5 + 3*T1 + 10*C1 - 4*C1*C1 - 9*e_p2)*D*D*D*D/24
-    + (61 + 90*T1 + 298*C1 + 45*T1*T1 - 252*e_p2 - 3*C1*C1)*D*D*D*D*D*D/720
-  );
-
-  const lon0 = ((zona - 1)*6 - 180 + 3) * Math.PI / 180;
-  const lon = lon0 + (
-    D
-    - (1 + 2*T1 + C1)*D*D*D/6
-    + (5 - 2*C1 + 28*T1 - 3*C1*C1 + 8*e_p2 + 24*T1*T1)*D*D*D*D*D/120
-  ) / Math.cos(phi1);
-
-  return [lon * 180/Math.PI, lat * 180/Math.PI]; // [longitude, latitude]
-}
-
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
 async function dlShapefile() {
   if (!S.vertices || S.vertices.length < 3) {
@@ -2640,20 +2819,33 @@ async function dlShapefile() {
 
     const nomeArquivo = (S.nomeImovel.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'') || 'Fazenda');
 
-    // Determinar zona UTM a partir do datum selecionado
-    const datumVal = getVal('f-datum');
-    let zonaDetectada = 21;
-    if (datumVal.includes('20')) zonaDetectada = 20;
-    if (datumVal.includes('22')) zonaDetectada = 22;
+    // USAR O MESMO DADO DO S.shapeData, QUE JÁ FOI GERADO JUNTO COM O KML!
+    // Extrair polígono do shapeData para garantir mesmas coordenadas que o KML
+    let ringGeo = null;
+    if (S.shapeData && S.shapeData.features && S.shapeData.features.length > 0) {
+      const polygonFeature = S.shapeData.features.find(f => f.geometry && f.geometry.type === 'Polygon');
+      if (polygonFeature) {
+        ringGeo = polygonFeature.geometry.coordinates[0];
+      }
+    }
+    
+    // Se não tiver shapeData, usar as mesmas coords que o KML
+    if (!ringGeo) {
+      // Determinar zona UTM a partir do datum selecionado
+      const datumVal = getVal('f-datum');
+      let zonaDetectada = 21;
+      if (datumVal.includes('20')) zonaDetectada = 20;
+      if (datumVal.includes('22')) zonaDetectada = 22;
 
-    // Converter coordenadas UTM → Lat/Lon geográficas para o shpwrite
-    // shpwrite espera coordenadas geográficas [lon, lat]
-    const coordsGeo = S.vertices.map(v => {
-      return utmToLatLon(v.E, v.N, zonaDetectada, 'S');
-    });
-    const ringGeo = coordsGeo.concat([coordsGeo[0]]); // fechar polígono
+      // Converter UTM para Lat/Lon (mesmo que o KML) para shpwrite
+      const coordsGeo = S.vertices.map(v => {
+        const latLon = utmToLatLon(v.E, v.N, zonaDetectada);
+        return [latLon.lon, latLon.lat]; // GeoJSON uses [lon, lat] order!
+      });
+      ringGeo = coordsGeo.concat([coordsGeo[0]]); // fechar polígono
+    }
 
-    // Features com coordenadas geográficas (shpwrite usa WGS84/SIRGAS2000)
+    // Features com coordenadas geográficas (Lat/Lon) MESMAS DO KML
     const atpFeature = {
       type: "Feature",
       properties: { ID: 1 },
@@ -2665,7 +2857,7 @@ async function dlShapefile() {
       geometry: { type: "Polygon", coordinates: [ringGeo] }
     };
 
-    // Gerar blobs (sem pasta)
+    // Gerar blobs
     const atpZipBlob = await window.shpwrite.zip({
       type: "FeatureCollection",
       features: [atpFeature]
@@ -2679,25 +2871,27 @@ async function dlShapefile() {
     const JSZip = window.shpwrite.JSZip;
     const finalZip = new JSZip();
 
-    // ATP files
+    // Processar ATP para raiz
     const atpZip = await JSZip.loadAsync(atpZipBlob);
     for (const [name, file] of Object.entries(atpZip.files)) {
       if (!file.dir) {
         const content = await file.async('uint8array');
-        finalZip.file(`ATP/${name}`, content);
+        const fileName = name.split('/').pop(); // Garante que o arquivo fique na raiz
+        finalZip.file(fileName, content);
       }
     }
-    finalZip.file('ATP/ATP.prj', getSIRGAS2000GeoPRJ());
+    finalZip.file('ATP.prj', getSIRGAS2000GeoPRJ()); // Usar PRJ geográfico
 
-    // Processar AIR
+    // Processar AIR para raiz
     const airZip = await JSZip.loadAsync(airZipBlob);
     for (const [name, file] of Object.entries(airZip.files)) {
       if (!file.dir) {
         const content = await file.async('uint8array');
-        finalZip.file(`AIR/${name}`, content);
+        const fileName = name.split('/').pop(); // Garante que o arquivo fique na raiz
+        finalZip.file(fileName, content);
       }
     }
-    finalZip.file('AIR/AIR.prj', getSIRGAS2000GeoPRJ());
+    finalZip.file('AIR.prj', getSIRGAS2000GeoPRJ()); // Usar PRJ geográfico
 
     const finalBlob = await finalZip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     const url = URL.createObjectURL(finalBlob);
@@ -2706,7 +2900,7 @@ async function dlShapefile() {
     a.download = `${nomeArquivo}_shapefile.zip`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('Shapefile (.zip) com ATP e AIR exportado com sucesso!', 'ok');
+    toast('Shapefile (.zip) com ATP e AIR exportado com sucesso! Coordenadas iguais ao KML.', 'ok');
   } catch(e) {
     toast('Erro ao gerar Shapefile: ' + e.message, 'erro');
     console.error(e);

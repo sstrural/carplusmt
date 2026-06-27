@@ -168,7 +168,7 @@ export class DEMLoader {
    */
   async _loadFromGEBCO(z, x, y) {
     // GEBCO tiles endpoint (example - actual endpoint may vary)
-    const url = `https://www.gebco.net/data/gebco_2023/gebco_2023.nc`; // Simplified
+    const url = 'https://www.gebco.net/data/gebco_2023/gebco_2023.nc'; // Simplified
     
     try {
       const controller = new AbortController();

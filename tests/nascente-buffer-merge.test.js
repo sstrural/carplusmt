@@ -237,7 +237,7 @@ describe('Nascente Buffer Merge (Task 3.3)', () => {
       expect(result.nascentes.length).toBe(0);
       expect(result.app_total_ha).toBe(0);
 
-      console.log(`✓ Test 6 passed: Zero nascentes → empty result`);
+      console.log('✓ Test 6 passed: Zero nascentes → empty result');
     });
   });
 
@@ -341,7 +341,7 @@ describe('Nascente Buffer Merge (Task 3.3)', () => {
       );
 
       console.log(
-        `✓ Property 3 passed: Nascente Buffer Merge (Monotonicity) validated with 250 random examples`
+        '✓ Property 3 passed: Nascente Buffer Merge (Monotonicity) validated with 250 random examples'
       );
     });
 
@@ -376,7 +376,7 @@ describe('Nascente Buffer Merge (Task 3.3)', () => {
       );
 
       console.log(
-        `✓ Property 3b passed: Buffer radius consistency (50m) verified for 50 examples`
+        '✓ Property 3b passed: Buffer radius consistency (50m) verified for 50 examples'
       );
     });
 

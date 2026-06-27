@@ -67,7 +67,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.warning).toBeNull();
       expect(validation.status).toBe('current');
 
-      console.log(`✓ Test 1 passed: Current year data marked as recent`);
+      console.log('✓ Test 1 passed: Current year data marked as recent');
     });
 
     /**
@@ -83,7 +83,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.warning).toBeNull();
       expect(validation.status).toBe('acceptable');
 
-      console.log(`✓ Test 2 passed: 1-year-old data is acceptable`);
+      console.log('✓ Test 2 passed: 1-year-old data is acceptable');
     });
 
     /**
@@ -99,7 +99,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.warning).toBeNull();
       expect(validation.status).toBe('acceptable');
 
-      console.log(`✓ Test 3 passed: 2-year-old data at threshold is acceptable`);
+      console.log('✓ Test 3 passed: 2-year-old data at threshold is acceptable');
     });
 
     /**
@@ -140,7 +140,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.recommendation).toContain('STRONGLY RECOMMENDED');
 
       console.log(
-        `✓ Test 5 passed: 6-year-old data very outdated, strong warning issued`
+        '✓ Test 5 passed: 6-year-old data very outdated, strong warning issued'
       );
     });
 
@@ -157,7 +157,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.warning).toContain('future');
       expect(validation.status).toBe('invalid');
 
-      console.log(`✓ Test 6 passed: Future year handled as invalid`);
+      console.log('✓ Test 6 passed: Future year handled as invalid');
     });
 
     /**
@@ -173,7 +173,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation.warning).toBeDefined();
       expect(validation.status).toBe('outdated');
 
-      console.log(`✓ Test 7 passed: Custom threshold of 1 year applied correctly`);
+      console.log('✓ Test 7 passed: Custom threshold of 1 year applied correctly');
     });
 
     /**
@@ -192,7 +192,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(validation).toHaveProperty('status');
       expect(validation).toHaveProperty('timestamp');
 
-      console.log(`✓ Test 8 passed: All required fields present in validation result`);
+      console.log('✓ Test 8 passed: All required fields present in validation result');
     });
   });
 
@@ -230,7 +230,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(overridden.total_coverage_ha_original).toBe(350);
 
       console.log(
-        `✓ Test 9 passed: Override applied - coverage 58.5% → 65.0%`
+        '✓ Test 9 passed: Override applied - coverage 58.5% → 65.0%'
       );
     });
 
@@ -256,7 +256,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(accepted.override_reason).toBe('data_accepted_despite_age');
 
       console.log(
-        `✓ Test 10 passed: Outdated data accepted with same percentage`
+        '✓ Test 10 passed: Outdated data accepted with same percentage'
       );
     });
 
@@ -272,7 +272,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.error).toBeDefined();
       expect(result.error).toContain('Invalid');
 
-      console.log(`✓ Test 11 passed: Negative percentage rejected`);
+      console.log('✓ Test 11 passed: Negative percentage rejected');
     });
 
     /**
@@ -287,7 +287,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.error).toBeDefined();
       expect(result.error).toContain('Invalid');
 
-      console.log(`✓ Test 12 passed: Percentage > 100 rejected`);
+      console.log('✓ Test 12 passed: Percentage > 100 rejected');
     });
 
     /**
@@ -315,7 +315,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(overrideTime.getTime()).toBeLessThanOrEqual(after.getTime());
 
       console.log(
-        `✓ Test 13 passed: Override metadata and timestamp recorded`
+        '✓ Test 13 passed: Override metadata and timestamp recorded'
       );
     });
 
@@ -351,7 +351,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(overridden.total_coverage_ha).toBeCloseTo(360, 0);
 
       console.log(
-        `✓ Test 14 passed: Override distributed proportionally across vegetation types`
+        '✓ Test 14 passed: Override distributed proportionally across vegetation types'
       );
     });
 
@@ -381,7 +381,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(overridden).toHaveProperty('override_notes');
       expect(overridden).toHaveProperty('override_timestamp');
 
-      console.log(`✓ Test 15 passed: Override result has all required fields`);
+      console.log('✓ Test 15 passed: Override result has all required fields');
     });
   });
 
@@ -402,7 +402,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.data_recency_status).toBe('acceptable');
       expect(result.data_recency_warning).toBeNull();
 
-      console.log(`✓ Test 16 passed: Recent data has no recency warning`);
+      console.log('✓ Test 16 passed: Recent data has no recency warning');
     });
 
     /**
@@ -424,7 +424,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.allow_manual_override).toBe(true);
 
       console.log(
-        `✓ Test 17 passed: Outdated data includes warning and allows override`
+        '✓ Test 17 passed: Outdated data includes warning and allows override'
       );
     });
 
@@ -447,7 +447,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.data_recency_status).toBe('unknown_age');
 
       console.log(
-        `✓ Test 18 passed: Unknown year data marked for verification`
+        '✓ Test 18 passed: Unknown year data marked for verification'
       );
     });
 
@@ -464,7 +464,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result.allow_manual_override).toBe(true);
 
       console.log(
-        `✓ Test 19 passed: Coverage result includes allow_manual_override flag`
+        '✓ Test 19 passed: Coverage result includes allow_manual_override flag'
       );
     });
 
@@ -485,7 +485,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(result).toHaveProperty('allow_manual_override');
 
       console.log(
-        `✓ Test 20 passed: All coverage results include data recency fields`
+        '✓ Test 20 passed: All coverage results include data recency fields'
       );
     });
   });
@@ -519,7 +519,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(overridden.coverage_percentage).toBe(75.0);
       expect(overridden.manual_override_applied).toBe(true);
       console.log(
-        `  Step 2: Overridden with drone survey data to 75.0%`
+        '  Step 2: Overridden with drone survey data to 75.0%'
       );
 
       // Step 3: Verify override preserves original data
@@ -528,7 +528,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
         `  Step 3: Original data preserved: ${overridden.coverage_percentage_original}% → ${overridden.coverage_percentage}%`
       );
 
-      console.log(`✓ Test 21 passed: Complete data recency workflow works`);
+      console.log('✓ Test 21 passed: Complete data recency workflow works');
     });
 
     /**
@@ -553,7 +553,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       expect(coverage.allow_manual_override).toBe(true);
       const manualResult = allowManualOverride(coverage, 65.0);
       expect(manualResult.manual_override_applied).toBe(true);
-      console.log(`  Req 5.3b - Manual override applied: 65.0%`);
+      console.log('  Req 5.3b - Manual override applied: 65.0%');
 
       // Requirement 5.6: Include age information
       expect(coverage.year).toBe(oldYear);
@@ -564,7 +564,7 @@ describe('Data Recency Warnings - Task 6.4', () => {
       );
 
       console.log(
-        `✓ Test 22 passed: Requirements 5.3 & 5.6 validated together`
+        '✓ Test 22 passed: Requirements 5.3 & 5.6 validated together'
       );
     });
   });
