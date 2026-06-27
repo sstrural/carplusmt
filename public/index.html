@@ -2186,6 +2186,12 @@ ${placemarks}
 // ── GERAR COLEÇÃO ESPACIAL PARA SHAPEFILE ──
 function buildShapeFeatureCollection(vertices, coords, dados, zona) {
   const areaNum = parseFloat((dados.area || '0').replace(',', '.')) || 0;
+  
+  // Criar o polígono e limpar pontos repetidos
+  let ring = coords.map(c => [parseFloat(c.lon.toFixed(8)), parseFloat(c.lat.toFixed(8))])
+    .concat([[parseFloat(coords[0].lon.toFixed(8)), parseFloat(coords[0].lat.toFixed(8))]]);
+  ring = removeDuplicatePoints(ring);
+  
   const featureCollection = {
     type: "FeatureCollection",
     crs: {
@@ -2222,10 +2228,7 @@ function buildShapeFeatureCollection(vertices, coords, dados, zona) {
         },
         geometry: {
           type: "Polygon",
-          coordinates: [
-            coords.map(c => [parseFloat(c.lon.toFixed(8)), parseFloat(c.lat.toFixed(8))])
-              .concat([[parseFloat(coords[0].lon.toFixed(8)), parseFloat(coords[0].lat.toFixed(8))]])
-          ]
+          coordinates: [ring]
         }
       }
     ]
@@ -2807,6 +2810,29 @@ function recusarValidacao() {
   toast('Edite os dados e revalide.', 'warn');
 }
 
+// ── Função auxiliar para remover pontos repetidos consecutivos ──
+function removeDuplicatePoints(points) {
+  if (points.length < 2) return points;
+  const cleaned = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    const prev = cleaned[cleaned.length - 1];
+    const curr = points[i];
+    // Comparar com 8 casas decimais para evitar problemas de arredondamento
+    if (Math.abs(curr[0] - prev[0]) > 1e-8 || Math.abs(curr[1] - prev[1]) > 1e-8) {
+      cleaned.push(curr);
+    }
+  }
+  // Garantir que o polígono esteja fechado (último ponto igual ao primeiro)
+  if (cleaned.length >= 2) {
+    const first = cleaned[0];
+    const last = cleaned[cleaned.length - 1];
+    if (Math.abs(first[0] - last[0]) > 1e-8 || Math.abs(first[1] - last[1]) > 1e-8) {
+      cleaned.push(first);
+    }
+  }
+  return cleaned;
+}
+
 // ── DOWNLOAD SHAPEFILE (ZIP com .shp, .shx, .dbf, .prj) ──
 async function dlShapefile() {
   if (!S.vertices || S.vertices.length < 3) {
@@ -2841,6 +2867,9 @@ async function dlShapefile() {
       });
       ringGeo = coordsGeo.concat([coordsGeo[0]]); // Fechar polígono
     }
+
+    // Remover pontos repetidos consecutivos
+    ringGeo = removeDuplicatePoints(ringGeo);
 
     const JSZip = window.shpwrite.JSZip;
     const finalZip = new JSZip();
