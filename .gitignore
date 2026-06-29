@@ -38,12 +38,15 @@ Thumbs.db
 *.pdf
 
 # Shapefiles gerados
-SIMCAR_Fazenda_Novo_Sobradinho/
-inspecionar-shapefiles-gerados.py
 perimetro.kml
-modelo-shape.rar
-temp_null_test.*
-modelo-shape-analysis.json
+SIMCAR_*/
 _sem*
 _simcar*
-"sem geometria temática e com identificadores de edição�"
+modelo-shape-analysis.json
+temp_null_test.*
+
+# Backups e arquivos temporários organizados
+backups/
+*.kml
+*.zip
+"sem geometria temática e com identificadores de edição"
