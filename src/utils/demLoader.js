@@ -171,17 +171,52 @@ export class DEMLoader {
     const url = 'https://www.gebco.net/data/gebco_2023/gebco_2023.nc'; // Simplified
     
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const fetchOptions = {};
+      
+      // Only use AbortController if available and working
+      if (typeof AbortController !== 'undefined') {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            try {
+              controller.abort();
+            } catch (e) {
+              console.warn('Error aborting request:', e);
+            }
+          }, this.timeout);
+          
+          fetchOptions.signal = controller.signal;
+          const response = await fetch(url, fetchOptions);
+          clearTimeout(timeoutId);
 
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
+          if (!response.ok) {
+            throw new Error(`GEBCO fetch failed: ${response.status}`);
+          }
 
-      if (!response.ok) {
-        throw new Error(`GEBCO fetch failed: ${response.status}`);
+          return await response.arrayBuffer();
+        } catch (err) {
+          // If AbortController fails, fall back to timeout
+          if (err.name === 'AbortError' || err.message.includes('abort')) {
+            console.warn('GEBCO load error: Request timeout');
+            return null;
+          }
+          throw err;
+        }
+      } else {
+        // Fallback if AbortController not available
+        const response = await Promise.race([
+          fetch(url, fetchOptions),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), this.timeout)
+          ),
+        ]);
+        
+        if (!response.ok) {
+          throw new Error(`GEBCO fetch failed: ${response.status}`);
+        }
+
+        return await response.arrayBuffer();
       }
-
-      return await response.arrayBuffer();
     } catch (err) {
       console.warn('GEBCO load error:', err);
       return null;
@@ -203,17 +238,52 @@ export class DEMLoader {
     const url = `https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/tile/${z}/${y}/${x}`;
     
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const fetchOptions = {};
+      
+      // Only use AbortController if available and working
+      if (typeof AbortController !== 'undefined') {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            try {
+              controller.abort();
+            } catch (e) {
+              console.warn('Error aborting request:', e);
+            }
+          }, this.timeout);
+          
+          fetchOptions.signal = controller.signal;
+          const response = await fetch(url, fetchOptions);
+          clearTimeout(timeoutId);
 
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
+          if (!response.ok) {
+            throw new Error(`USGS fetch failed: ${response.status}`);
+          }
 
-      if (!response.ok) {
-        throw new Error(`USGS fetch failed: ${response.status}`);
+          return await response.arrayBuffer();
+        } catch (err) {
+          // If AbortController fails, fall back to timeout
+          if (err.name === 'AbortError' || err.message.includes('abort')) {
+            console.warn('USGS load error: Request timeout');
+            return null;
+          }
+          throw err;
+        }
+      } else {
+        // Fallback if AbortController not available
+        const response = await Promise.race([
+          fetch(url, fetchOptions),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), this.timeout)
+          ),
+        ]);
+        
+        if (!response.ok) {
+          throw new Error(`USGS fetch failed: ${response.status}`);
+        }
+
+        return await response.arrayBuffer();
       }
-
-      return await response.arrayBuffer();
     } catch (err) {
       console.warn('USGS load error:', err);
       return null;
