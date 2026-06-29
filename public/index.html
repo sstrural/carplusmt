@@ -1126,6 +1126,9 @@ const AnalisadorLayers = {
   }
 };
 
+// Expor AnalisadorLayers para o escopo global
+window.AnalisadorLayers = AnalisadorLayers;
+
 window.showLayerTab = function(n) {
   document.querySelectorAll('.tab-layer').forEach((t, i) => {
     t.style.color = i === n ? '#1a5c38' : '#666';
