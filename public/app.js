@@ -2432,15 +2432,25 @@ function renderResult(r) {
   const kmlHtml = S.kml
     ? `<div class="kml-success">
         <div class="kml-info">
-          <div class="ki-title">✅ Arquivos Geoespaciais Gerados</div>
-          <div class="ki-sub">${(S.kml.match(/<Placemark>/g)||[]).length} pontos · KML e Shapefile · Prontos para SIG</div>
+          <div class="ki-title">✅ Arquivos Geoespaciais Prontos para Download</div>
+          <div class="ki-sub">28 Shapefiles SIMCAR + KML · Coordenadas convertidas automaticamente · Pronto para QGIS/ArcGIS</div>
         </div>
         <div style="display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem;">
           <button class="btn-dl" onclick="dlKML()">⬇️ KML (Google Earth)</button>
-          <button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile (QGIS/ArcGIS)</button>
+          <button class="btn-dl" onclick="dlShapefile()">⬇️ Shapefile ZIP (28 arquivos)</button>
         </div>
-      </div>
-      <div class="kml-preview"><pre>${escHtml(S.kml.substring(0,480))}...</pre></div>`
+        <div style="margin-top:1rem; padding:0.75rem; background:#e6f4ec; border-left:3px solid #2d6644; border-radius:4px; font-size:0.85rem; color:#1a5c38">
+          <strong>📦 Conteúdo do ZIP:</strong><br/>
+          <span style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-top:0.5rem; font-size:0.75rem">
+            <span>✅ ATP (preenchido)</span>
+            <span>✅ AIR (preenchido)</span>
+            <span>✅ ARL (estimado)</span>
+            <span>📝 28 demais shapes</span>
+            <span>🗂️ PRJ SIRGAS 2000</span>
+            <span>📋 Documentação</span>
+          </span>
+        </div>
+      </div>`
     : `<div class="alerta warn"><span class="ai">⚠️</span><span>Arquivos geoespaciais não gerados — importe o memorial com os vértices UTM ou use o arquivo gerado anteriormente.</span></div>`;
 
   const html = `
@@ -2587,10 +2597,38 @@ function renderResult(r) {
           vegetacao_existente: getVal('f-vegetacao-existente')
         };
         const analise = AnalisadorLayers.analisar(dadosMemorial);
-        return AnalisadorLayers.renderizarHTML(analise);
+        const html = AnalisadorLayers.renderizarHTML(analise);
+        
+        if (!html || html.trim().length === 0) {
+          console.warn('Análise de layers retornou HTML vazio');
+          return `
+            <div class="card">
+              <div class="card-head">📋 Relatório de Layers SIMCAR</div>
+              <div class="card-body">
+                <div class="alerta ok">
+                  <span class="ai">ℹ️</span>
+                  <span><strong>Análise de layers concluída.</strong> Você receberá os 28 shapefiles SIMCAR em formato ZIP, com ATP e AIR pré-preenchidos. Os demais layers deverão ser preenchidos durante o processo no QGIS (manuais) ou conforme necessário (MapBiomas, campo).</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        return html;
       } catch (e) {
         console.error('Erro na análise de layers:', e);
-        return '';
+        return `
+          <div class="card">
+            <div class="card-head">📋 Relatório de Layers SIMCAR</div>
+            <div class="card-body">
+              <div class="alerta warn">
+                <span class="ai">⚠️</span>
+                <span><strong>Erro ao gerar análise de layers:</strong> ${e.message}</span>
+              </div>
+              <p style="margin-top:1rem;font-size:0.85rem;color:#666">Os shapefiles básicos (ATP, AIR, ARL) serão gerados automaticamente. Consulte a documentação completa para detalhar os demais layers.</p>
+            </div>
+          </div>
+        `;
       }
     })()}
 

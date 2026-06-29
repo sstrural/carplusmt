@@ -50,3 +50,4 @@ backups/
 *.kml
 *.zip
 "sem geometria temática e com identificadores de edição"
+.env*
