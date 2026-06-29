@@ -912,6 +912,230 @@ const PassivoAmbiental = {
   }
 };
 
+// ÔöÇÔöÇ ANALISADOR DE LAYERS SIMCAR ÔöÇÔöÇ
+const AnalisadorLayers = {
+  layerRules: [
+    { name: 'ATP', category: 'auto', description: 'V├®rtices do memorial', source: 'memorial', note: 'Extraido automaticamente do memorial descritivo' },
+    { name: 'AIR', category: 'auto', description: 'Mesmo pol├¡gono do ATP', source: 'memorial', note: 'Mesmas coordenadas do ATP' },
+    { name: 'ARL', category: 'auto', description: 'C├ílculo autom├ítico 35% Cerrado / 80% Amaz├┤nia', source: 'calculo', note: 'Calculado automaticamente baseado no bioma' },
+    { name: 'ARLREM', category: 'field', description: 'Se houver ├írea com deficiencia de RL', source: 'manual', effort: 'M├®dio' },
+    { name: 'AUAS', category: 'field', description: '├ûgua utilizada na susten├ºabilidade rural', source: 'manual', effort: 'Alto' },
+    { name: 'AURD', category: 'field', description: '├ûrea de uso restrito delineada', source: 'manual', effort: 'Alto' },
+    { name: 'AVN', category: 'field', description: '├ûrea de vegeta├º├úo nativa', source: 'manual', effort: 'Alto' },
+    { name: 'AREA_ALTITUDE_1800', category: 'mdt', description: '├ürea com altitude > 1800m', source: 'dem' },
+    { name: 'AREA_CONSOLIDADA', category: 'image', description: '├ürea consolidada (campo/agricultura)', source: 'image' },
+    { name: 'AREA_DECLIVIDADE', category: 'mdt', description: '├ürea com declive > 45%', source: 'dem' },
+    { name: 'AREA_TOPO_MORRO', category: 'mdt', description: '├ürea de topo de morro', source: 'dem' },
+    { name: 'AREA_UMIDA', category: 'field', description: '├üreas ├║midas / pantal├┤nios', source: 'manual', effort: 'M├®dio' },
+    { name: 'AREA_USO_RESTRITO', category: 'field', description: '├ürea de uso restrito delineada', source: 'manual', effort: 'M├®dio' },
+    { name: 'BORDA_CHAPADA', category: 'mdt', description: 'Borda de chapada', source: 'dem' },
+    { name: 'INTERESSE_SOCIAL', category: 'na', description: '├ürea de interesse social' },
+    { name: 'LAGOA_NATURAL', category: 'field', description: 'Lagoas naturais', source: 'manual', effort: 'Baixo' },
+    { name: 'MANGUEZAL', category: 'na', description: 'Ecossistema costeiro' },
+    { name: 'NASCENTE', category: 'field', description: 'Nascentes de ├ígua', source: 'manual', effort: 'Baixo' },
+    { name: 'RESERVATORIO_ARTIFICIAL', category: 'field', description: 'Reservat├│rios artificiais', source: 'manual', effort: 'Baixo' },
+    { name: 'SAVANA', category: 'mapbiomas', description: 'Savana (MapBiomas)', source: 'mapbiomas' },
+    { name: 'CERRADO_SENTIDO_RESTRITO', category: 'mapbiomas', description: 'Cerrado Sentido Restrito', source: 'mapbiomas' },
+    { name: 'FLORESTA_DECIDUA', category: 'mapbiomas', description: 'Floresta Decídua', source: 'mapbiomas' },
+    { name: 'FLORESTA_SEMIDECIDUA', category: 'mapbiomas', description: 'Floresta Semidecídua', source: 'mapbiomas' },
+    { name: 'FLORESTA_OMBROFILA', category: 'mapbiomas', description: 'Floresta Ombrófila', source: 'mapbiomas' },
+    { name: 'FLORESTA_PLANTADA', category: 'image', description: 'Florestas plantadas', source: 'image' },
+    { name: 'OUTRAS', category: 'na', description: 'Outras categorias' },
+    { name: 'APP_CALCULO', category: 'na', description: '├ürea de Prote├º├úo Permanente (calculada)' }
+  ],
+
+  analisar: function(dados) {
+    const areaTotal = parseFloat(dados.area) || 0;
+    const bioma = dados.bioma || 'cerr';
+    const vegetacaoExistente = parseFloat(dados.vegetacao_existente) || 0;
+    const rlPercentual = bioma === 'amz' ? 0.8 : 0.35;
+    const rlMinima = areaTotal * rlPercentual;
+
+    const stats = {
+      auto: 0,
+      fieldImage: 0,
+      mapbiomas: 0,
+      na: 0
+    };
+
+    this.layerRules.forEach(layer => {
+      if (layer.category === 'auto') stats.auto++;
+      else if (['field', 'image', 'mdt'].includes(layer.category)) stats.fieldImage++;
+      else if (layer.category === 'mapbiomas') stats.mapbiomas++;
+      else if (layer.category === 'na') stats.na++;
+    });
+
+    return {
+      layers: this.layerRules,
+      stats,
+      dados: {
+        areaTotal,
+        bioma,
+        vegetacaoExistente,
+        rlMinima,
+        rlPercentual
+      }
+    };
+  },
+
+  renderizarHTML: function(analise) {
+    const { layers, stats, dados } = analise;
+
+    const badgeStyles = {
+      auto: 'background:#dcfce7;color:#15803d',
+      image: 'background:#dbeafe;color:#1e40af',
+      mapbiomas: 'background:#ede9fe;color:#5b21b6',
+      field: 'background:#fff7ed;color:#92400e',
+      mdt: 'background:#fce7f3;color:#9d174d',
+      na: 'background:#f1f5f9;color:#64748b'
+    };
+
+    const badgeTexts = {
+      auto: '✅ Autom├ítico',
+      image: '🛰️ Imagem',
+      mapbiomas: '🗂️ MapBiomas',
+      field: '🚶 Campo',
+      mdt: '📡 MDT',
+      na: '➖ N/A'
+    };
+
+    const tabelaResumo = layers.map(layer => `
+      <tr>
+        <td class="layer-nome">${layer.name}</td>
+        <td><span class="badge" style="${badgeStyles[layer.category]};padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:3px">${badgeTexts[layer.category]}</span></td>
+        <td>${layer.description}${layer.note ? '<div class="obs" style="font-size:10px;color:#c2860a;margin-top:2px;font-style:italic">' + layer.note + '</div>' : ''}</td>
+      </tr>
+    `).join('');
+
+    const layersAuto = layers.filter(l => l.category === 'auto').map(layer => `
+      <div class="regra" style="background:#fff;border:1px solid #d0d8cc;border-radius:8px;overflow:hidden;margin-bottom:10px">
+        <div class="regra-head" style="display:flex;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid #eef2ec">
+          <span class="regra-icon" style="font-size:18px">🗺️</span>
+          <div>
+            <div class="regra-titulo" style="font-size:13px;font-weight:700">${layer.name}</div>
+            <span class="badge" style="${badgeStyles.auto};padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700">100% autom├ítico</span>
+          </div>
+        </div>
+        <div class="regra-body" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+          <div class="regra-item" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.5">
+            <span class="dot" style="width:6px;height:6px;border-radius:50%;background:#2d8653;flex-shrink:0;margin-top:5px"></span>
+            <span>${layer.description}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    const layersManuais = layers.filter(l => ['field', 'image', 'mapbiomas', 'mdt'].includes(l.category)).map(layer => `
+      <tr>
+        <td class="layer-nome">${layer.name}</td>
+        <td>${layer.description}</td>
+        <td>${layer.effort || '-'}</td>
+      </tr>
+    `).join('');
+
+    const layersNA = layers.filter(l => l.category === 'na').map(layer => `
+      <tr>
+        <td class="layer-nome">${layer.name}</td>
+        <td>${layer.description}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <div class="card">
+        <div class="card-head">📋 An├ílise dos Layers SIMCAR</div>
+        <div class="card-body">
+          <div style="display:flex;background:#fff;border-bottom:2px solid #d0d8cc;overflow-x:auto;margin-bottom:15px">
+            <div class="tab-layer on" onclick="showLayerTab(0)" style="padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:#1a5c38;border-bottom:3px solid #1a5c38;margin-bottom:-2px">📊 Resumo</div>
+            <div class="tab-layer" onclick="showLayerTab(1)" style="padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px">✅ Autom├íticos</div>
+            <div class="tab-layer" onclick="showLayerTab(2)" style="padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px">✏️ Manuais</div>
+            <div class="tab-layer" onclick="showLayerTab(3)" style="padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px">➖ N├úo se aplica</div>
+          </div>
+
+          <div class="sec-layer on" id="sec-layer-0">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+              <div style="background:#fff;border:1px solid #d0d8cc;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:28px;font-weight:800;line-height:1;color:#15803d">${stats.auto}</div>
+                <div style="font-size:10px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:.04em">Autom├íticos</div>
+              </div>
+              <div style="background:#fff;border:1px solid #d0d8cc;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:28px;font-weight:800;line-height:1;color:#c2860a">${stats.fieldImage}</div>
+                <div style="font-size:10px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:.04em">Campo/Imagem</div>
+              </div>
+              <div style="background:#fff;border:1px solid #d0d8cc;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:28px;font-weight:800;line-height:1;color:#1a5c9c">${stats.mapbiomas}</div>
+                <div style="font-size:10px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:.04em">MapBiomas</div>
+              </div>
+              <div style="background:#fff;border:1px solid #d0d8cc;border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:28px;font-weight:800;line-height:1;color:#888">${stats.na}</div>
+                <div style="font-size:10px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:.04em">N├úo se aplica</div>
+              </div>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #d0d8cc">
+              <thead>
+                <tr>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Layer</th>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Status</th>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Fonte</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tabelaResumo}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sec-layer" id="sec-layer-1" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${layersAuto}
+            </div>
+          </div>
+
+          <div class="sec-layer" id="sec-layer-2" style="display:none">
+            <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #d0d8cc">
+              <thead>
+                <tr>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Layer</th>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Fonte</th>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Esfor├ºo</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${layersManuais}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sec-layer" id="sec-layer-3" style="display:none">
+            <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #d0d8cc">
+              <thead>
+                <tr>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Layer</th>
+                  <th style="background:#e8f0e4;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#1a4d2a;border-bottom:1px solid #d0d8cc">Por que n├úo se aplica</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${layersNA}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+};
+
+window.showLayerTab = function(n) {
+  document.querySelectorAll('.tab-layer').forEach((t, i) => {
+    t.style.color = i === n ? '#1a5c38' : '#666';
+    t.style.borderBottom = i === n ? '3px solid #1a5c38' : '3px solid transparent';
+  });
+  document.querySelectorAll('.sec-layer').forEach((s, i) => {
+    s.style.display = i === n ? 'block' : 'none';
+  });
+};
+
 // ÔöÇÔöÇ GERADOR DE RELAT├ôRIO PDF ÔöÇÔöÇ
 const GeradorPDF = {
   gerar: function() {
